@@ -1549,10 +1549,14 @@
                 const files = dt.files;
                 fileInput.files = files;
                 
-                // Trigger change event manual
-                const event = new Event('change');
-                fileInput.dispatchEvent(event);
+                // Directly trigger image preview
+                previewDonateImage({ target: fileInput });
             }, false);
+
+            // Trigger file input on click
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
         }
 
         function preventDefaults(e) {
@@ -1621,7 +1625,8 @@
 
                     document.getElementById("global-success-modal").classList.remove("hidden");
                 } else {
-                    alert("Donation registration failed: " + result.message);
+                    const errorDetails = result.errors && result.errors.length ? result.errors.map(err => err.message).join(' | ') : result.message;
+                    alert("Donation registration failed: " + errorDetails);
                 }
             } catch (err) {
                 console.error("Donation dispatch error:", err);

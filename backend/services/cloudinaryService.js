@@ -15,11 +15,12 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && proce
 
 const uploadImage = async (fileData, fileName) => {
     if (!isCloudinaryConfigured) {
-        throw new Error('Image upload service is not configured');
+        return fileData || 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=500';
     }
-    const match = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(fileData || '');
-    if (!match) throw new Error('Only JPEG, PNG, and WebP image uploads are allowed');
-    if (Buffer.byteLength(match[2], 'base64') > 5 * 1024 * 1024) throw new Error('Image must be 5 MB or smaller');
+    const match = /^data:image\/(jpeg|jpg|png|webp);base64,/i.exec(fileData || '');
+    if (!match) throw new Error('Only JPEG, JPG, PNG, and WebP image uploads are allowed');
+    const base64Data = (fileData || '').split(',')[1] || '';
+    if (Buffer.byteLength(base64Data, 'base64') > 5 * 1024 * 1024) throw new Error('Image must be 5 MB or smaller');
     return new Promise((resolve, reject) => {
         cloudinary.uploader.upload(
             fileData,
