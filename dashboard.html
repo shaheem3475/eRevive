@@ -211,6 +211,10 @@
             </div>
             
             <div class="flex items-center space-x-4">
+                <button onclick="toggleNotificationsModal()" class="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center relative hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm cursor-pointer" title="Notifications">
+                    <i class="fa-solid fa-bell text-sm"></i>
+                    <span id="notif-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center animate-pulse">0</span>
+                </button>
                 <button onclick="switchTab('rewards')" class="flex items-center bg-primary-50 dark:bg-primary-950/50 hover:bg-primary-100 dark:hover:bg-primary-950 text-primary-600 dark:text-primary-400 px-4 py-2 rounded-xl font-bold text-xs border border-primary-200/50 dark:border-primary-900/30 shadow-sm transition-all">
                     <span class="mr-1.5">🎁</span>
                     <span class="header-points-display">500</span> Eco Points
@@ -256,24 +260,24 @@
                         </div>
                     </div>
                     <div class="glass-card p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 shadow-sm flex flex-col justify-between hover-lift">
-                        <span class="text-accent text-lg mb-2 shrink-0"><i class="fa-solid fa-weight-hanging"></i></span>
+                        <span class="text-indigo-500 text-lg mb-2 shrink-0"><i class="fa-solid fa-hands-holding-child"></i></span>
                         <div class="mt-2">
-                            <div class="text-2xl font-black text-slate-900 dark:text-white">24.5 kg</div>
-                            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1">Weight Recycled</div>
+                            <div class="text-2xl font-black text-slate-900 dark:text-white" id="metrics-donations">0</div>
+                            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1">Total Donations</div>
                         </div>
                     </div>
                     <div class="glass-card p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 shadow-sm flex flex-col justify-between hover-lift">
-                        <span class="text-emerald-500 text-lg mb-2 shrink-0"><i class="fa-solid fa-seedling"></i></span>
+                        <span class="text-emerald-500 text-lg mb-2 shrink-0"><i class="fa-solid fa-hand-holding-dollar"></i></span>
                         <div class="mt-2">
-                            <div class="text-2xl font-black text-slate-900 dark:text-white">61.2 kg</div>
-                            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1">Carbon Offset</div>
+                            <div class="text-2xl font-black text-slate-900 dark:text-white" id="metrics-sales">0</div>
+                            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1">Total Sales</div>
                         </div>
                     </div>
                     <div class="glass-card p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 shadow-sm flex flex-col justify-between hover-lift">
-                        <span class="text-purple-500 text-lg mb-2 shrink-0"><i class="fa-solid fa-tree"></i></span>
+                        <span class="text-purple-500 text-lg mb-2 shrink-0"><i class="fa-solid fa-recycle"></i></span>
                         <div class="mt-2">
-                            <div class="text-2xl font-black text-slate-900 dark:text-white">4 Trees</div>
-                            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1">Trees Planted</div>
+                            <div class="text-2xl font-black text-slate-900 dark:text-white" id="metrics-recycles">0</div>
+                            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1">Total Recycles</div>
                         </div>
                     </div>
                 </div>
@@ -477,6 +481,16 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Sell History Section -->
+                <div class="space-y-4 pt-6 border-t border-slate-200/50 dark:border-slate-800/40">
+                    <h3 class="font-extrabold text-slate-900 dark:text-white text-sm flex items-center">
+                        <i class="fa-solid fa-clock-rotate-left text-emerald-500 mr-2 text-xs"></i> Sell Evaluations & History
+                    </h3>
+                    <div id="sell-history-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <p class="text-slate-400 text-xs py-4">No previous sell evaluations found.</p>
+                    </div>
+                </div>
             </section>
 
             <!-- PANEL 3: RECYCLE E-WASTE -->
@@ -548,6 +562,16 @@
                             </div>
                             <div id="recycle-map" class="shadow-inner border border-slate-200 dark:border-slate-800"></div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Recycle History Section -->
+                <div class="space-y-4 pt-6 border-t border-slate-200/50 dark:border-slate-800/40">
+                    <h3 class="font-extrabold text-slate-900 dark:text-white text-sm flex items-center">
+                        <i class="fa-solid fa-clock-rotate-left text-primary-500 mr-2 text-xs"></i> Certified Recycling History & Status
+                    </h3>
+                    <div id="recycle-history-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <p class="text-slate-400 text-xs py-4">No previous recycling requests found.</p>
                     </div>
                 </div>
             </section>
@@ -634,6 +658,16 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Donation History Section -->
+                <div class="space-y-4 pt-6 border-t border-slate-200/50 dark:border-slate-800/40">
+                    <h3 class="font-extrabold text-slate-900 dark:text-white text-sm flex items-center">
+                        <i class="fa-solid fa-clock-rotate-left text-indigo-500 mr-2 text-xs"></i> Donation History & Hardware Impact
+                    </h3>
+                    <div id="donation-history-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <p class="text-slate-400 text-xs py-4">No previous donation records found.</p>
                     </div>
                 </div>
             </section>
@@ -782,20 +816,7 @@
                                 <i class="fa-solid fa-clock-rotate-left text-primary-500 mr-2"></i> Redemption History
                             </h3>
                             <ul id="redemption-history-list" class="divide-y divide-slate-100 dark:divide-slate-800/60 text-[10px]">
-                                <li class="py-3 flex justify-between items-center">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="w-2 h-2 rounded-full bg-primary-500"></span>
-                                        <span class="font-semibold text-slate-700 dark:text-slate-300">₹50 Cashback (Amazon Card)</span>
-                                    </div>
-                                    <span class="text-slate-400 font-medium">Redeemed on 10th Feb</span>
-                                </li>
-                                <li class="py-3 flex justify-between items-center">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="w-2 h-2 rounded-full bg-primary-500"></span>
-                                        <span class="font-semibold text-slate-700 dark:text-slate-300">E-Waste Awareness Badge</span>
-                                    </div>
-                                    <span class="text-slate-400 font-medium">Unlocked on 5th Feb</span>
-                                </li>
+                                <li class="py-3 text-center text-slate-400">Loading redemption history...</li>
                             </ul>
                         </div>
                     </div>
@@ -834,6 +855,25 @@
     </nav>
 
     <!-- GLOBAL DYNAMIC MODALS -->
+    <!-- Notifications Modal -->
+    <div id="notifications-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-6 max-w-md w-full space-y-4 shadow-2xl border border-slate-200/50 dark:border-slate-800/80 animate-fade-in">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-bell text-primary-500"></i>
+                    <h3 class="font-extrabold text-slate-900 dark:text-white text-sm">Activity Notifications</h3>
+                </div>
+                <button onclick="handleMarkNotificationsRead()" class="text-[10px] font-bold text-primary-500 hover:underline">Mark all as read</button>
+            </div>
+            <div id="notifications-list" class="max-h-72 overflow-y-auto space-y-2 pr-1 text-xs">
+                <p class="text-slate-400 text-center py-6 text-xs">No notifications yet.</p>
+            </div>
+            <button onclick="toggleNotificationsModal()" class="w-full py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs uppercase tracking-wider">
+                Close
+            </button>
+        </div>
+    </div>
+
     <!-- Success Modal -->
     <div id="global-success-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-md w-full text-center space-y-6 shadow-2xl animate-fade-in border border-slate-200/50 dark:border-slate-800/80">
@@ -953,10 +993,26 @@
                     updateUsernameUI();
 
                     // Update metrics counters in dashboard home
-                    document.getElementById("circle-points").textContent = ecoPoints;
+                    const circlePts = document.getElementById("circle-points");
+                    if (circlePts) circlePts.textContent = ecoPoints;
                     
+                    const mDonations = document.getElementById("metrics-donations");
+                    if (mDonations) mDonations.textContent = data.totalDonationsCount || (data.donationHistory ? data.donationHistory.length : 0);
+                    
+                    const mSales = document.getElementById("metrics-sales");
+                    if (mSales) mSales.textContent = data.totalSalesCount || (data.sellHistory ? data.sellHistory.length : 0);
+
+                    const mRecycles = document.getElementById("metrics-recycles");
+                    if (mRecycles) mRecycles.textContent = data.totalRecyclesCount || (data.recycleHistory ? data.recycleHistory.length : 0);
+
+                    // Render Histories & Notifications
+                    renderDonationHistory(data.donationHistory || []);
+                    renderSellHistory(data.sellHistory || []);
+                    renderRecycleHistory(data.recycleHistory || []);
+                    renderNotifications(data.notifications || []);
+
                     // Render transaction ledgers into redemption list
-                    renderTransactionsList(data.transactionHistory);
+                    renderTransactionsList(data.transactionHistory || []);
                     await loadRewards();
                 } else {
                     console.error("Profile load rejected:", result.message);
@@ -966,10 +1022,177 @@
             }
         }
 
+        function renderDonationHistory(list) {
+            const container = document.getElementById("donation-history-list");
+            if (!container) return;
+            if (!list || list.length === 0) {
+                container.innerHTML = `<p class="text-slate-400 text-xs py-4 col-span-full">No previous donation records found.</p>`;
+                return;
+            }
+            container.innerHTML = list.map(item => {
+                const dateStr = new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const imgTag = item.imageUrl ? `<img src="${item.imageUrl}" class="w-16 h-16 object-cover rounded-xl border border-slate-200 dark:border-slate-800 shrink-0" alt="Donation"/>`
+                                             : `<div class="w-16 h-16 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-hands-holding-child"></i></div>`;
+                return `
+                    <div class="glass-card p-4 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 flex items-center space-x-4 shadow-sm hover-lift">
+                        ${imgTag}
+                        <div class="min-w-0 flex-grow">
+                            <h4 class="font-bold text-slate-800 dark:text-white text-xs truncate">${item.productDetails}</h4>
+                            <p class="text-[10px] text-slate-400 mt-0.5">${dateStr}</p>
+                            <div class="flex items-center space-x-2 mt-2">
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/40">
+                                    +${item.pointsAwarded || 150} Eco Pts
+                                </span>
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
+                                    ${item.status || 'Pending'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSellHistory(list) {
+            const container = document.getElementById("sell-history-list");
+            if (!container) return;
+            if (!list || list.length === 0) {
+                container.innerHTML = `<p class="text-slate-400 text-xs py-4 col-span-full">No previous sell evaluations found.</p>`;
+                return;
+            }
+            container.innerHTML = list.map(item => {
+                const dateStr = new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                return `
+                    <div class="glass-card p-4 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 flex items-center space-x-4 shadow-sm hover-lift">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500 flex items-center justify-center text-lg shrink-0">
+                            <i class="fa-solid fa-hand-holding-dollar"></i>
+                        </div>
+                        <div class="min-w-0 flex-grow">
+                            <h4 class="font-bold text-slate-800 dark:text-white text-xs truncate">${item.deviceName}</h4>
+                            <p class="text-[10px] text-slate-400 mt-0.5">${dateStr}</p>
+                            <div class="flex items-center space-x-2 mt-2">
+                                <span class="text-xs font-black text-emerald-500">$${item.offerPrice || 0}</span>
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                    ${item.status || 'Evaluated'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderRecycleHistory(list) {
+            const container = document.getElementById("recycle-history-list");
+            if (!container) return;
+            if (!list || list.length === 0) {
+                container.innerHTML = `<p class="text-slate-400 text-xs py-4 col-span-full">No previous recycling requests found.</p>`;
+                return;
+            }
+            container.innerHTML = list.map(item => {
+                const dateStr = new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const modeText = item.isPickup ? 'Home Pickup' : 'Self Drop-off';
+                return `
+                    <div class="glass-card p-4 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 flex items-center space-x-4 shadow-sm hover-lift">
+                        <div class="w-12 h-12 rounded-xl bg-primary-50 dark:bg-primary-950/40 text-primary-500 flex items-center justify-center text-lg shrink-0">
+                            <i class="fa-solid fa-recycle"></i>
+                        </div>
+                        <div class="min-w-0 flex-grow">
+                            <h4 class="font-bold text-slate-800 dark:text-white text-xs truncate">${item.product}</h4>
+                            <p class="text-[10px] text-slate-400 mt-0.5">${modeText} • ${dateStr}</p>
+                            <div class="flex items-center space-x-2 mt-2">
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400">
+                                    Status: ${item.status || 'Pending'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderNotifications(list) {
+            const container = document.getElementById("notifications-list");
+            const badge = document.getElementById("notif-badge");
+            if (!list || list.length === 0) {
+                if (container) container.innerHTML = `<p class="text-slate-400 text-center py-6 text-xs">No notifications yet.</p>`;
+                if (badge) badge.classList.add("hidden");
+                return;
+            }
+            const unreadCount = list.filter(n => !n.isRead).length;
+            if (badge) {
+                if (unreadCount > 0) {
+                    badge.textContent = unreadCount;
+                    badge.classList.remove("hidden");
+                } else {
+                    badge.classList.add("hidden");
+                }
+            }
+            if (container) {
+                container.innerHTML = list.map(n => `
+                    <div class="p-3 rounded-xl border ${n.isRead ? 'bg-slate-50/50 dark:bg-slate-900/40 border-slate-200/40 dark:border-slate-800/40' : 'bg-primary-50/30 dark:bg-primary-950/20 border-primary-200/50 dark:border-primary-900/30'} space-y-1">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-slate-800 dark:text-white text-xs">${n.title || 'Notification'}</span>
+                            <span class="text-[9px] text-slate-400">${new Date(n.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">${n.message}</p>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function toggleNotificationsModal() {
+            const modal = document.getElementById("notifications-modal");
+            if (modal) modal.classList.toggle("hidden");
+        }
+
+        async function handleMarkNotificationsRead() {
+            try {
+                const res = await fetch('http://localhost:5000/api/notifications/read', {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+                if (result.success) {
+                    const badge = document.getElementById("notif-badge");
+                    if (badge) badge.classList.add("hidden");
+                    await loadDashboardData();
+                }
+            } catch (e) {
+                console.error("Failed to mark notifications as read:", e);
+            }
+        }
+
         async function loadRewards() {
             const response = await fetch('http://localhost:5000/api/rewards', { headers: { 'Authorization': `Bearer ${token}` } });
             const result = await response.json();
             if (result.success) rewardsByName = Object.fromEntries(result.data.map(reward => [reward.name, reward]));
+        }
+
+        function renderTransactionsList(list) {
+            const container = document.getElementById("redemption-history-list");
+            if (!container) return;
+            if (!list || list.length === 0) {
+                container.innerHTML = `<li class="py-3 text-center text-slate-400 col-span-full">No redemptions yet. Claim a voucher to see history here.</li>`;
+                return;
+            }
+            container.innerHTML = list.map(tx => {
+                const dateStr = new Date(tx.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const label = tx.description || tx.type || 'Redemption';
+                const pts = tx.points ? (tx.points > 0 ? `+${tx.points}` : tx.points) : '';
+                return `
+                    <li class="py-3 flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-primary-500"></span>
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">${label}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            ${pts ? `<span class="text-primary-500 font-bold">${pts} pts</span>` : ''}
+                            <span class="text-slate-400 font-medium">${dateStr}</span>
+                        </div>
+                    </li>
+                `;
+            }).join('');
         }
 
         // Toggle Theme (Light/Dark Mode)
@@ -1218,13 +1441,18 @@
             const file = event.target.files[0];
             if (!file) return;
 
+            // Derive a clean device name from the uploaded filename (strip extension)
+            const rawName = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+            const uploadedDeviceName = rawName || 'Uploaded Device';
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 const imgPreview = document.getElementById("scan-img-preview");
                 imgPreview.src = e.target.result;
                 imgPreview.classList.remove("hidden");
                 document.getElementById("scan-placeholder").classList.add("hidden");
-                runScanSweepAnimation();
+                // Pass the actual filename-derived name instead of a random mock device
+                runScanSweepAnimation(uploadedDeviceName, null);
             };
             reader.readAsDataURL(file);
         }
@@ -1234,10 +1462,11 @@
             imgPreview.src = "WhatsApp Image 2025-02-27 at 21.25.54_d5959db5.jpg";
             imgPreview.classList.remove("hidden");
             document.getElementById("scan-placeholder").classList.add("hidden");
-            runScanSweepAnimation();
+            // Simulation uses random mock device (intentional demo behavior)
+            runScanSweepAnimation(null, null);
         }
 
-        function runScanSweepAnimation() {
+        function runScanSweepAnimation(overrideName, overridePrice) {
             const scanBar = document.getElementById("scan-bar");
             const loading = document.getElementById("scan-skeleton"); // Shows skeleton
             const deviceField = document.getElementById("detected-device-name");
@@ -1250,10 +1479,17 @@
             setTimeout(() => {
                 scanBar.classList.add("hidden");
                 loading.classList.add("hidden"); // Disable skeleton
-                
-                const device = mockDevices[Math.floor(Math.random() * mockDevices.length)];
-                sellDeviceName = device.name;
-                sellBasePrice = device.price;
+
+                if (overrideName) {
+                    // Use the provided name (from uploaded file) instead of random mock
+                    sellDeviceName = overrideName;
+                    sellBasePrice = overridePrice || 150; // Safe default base price
+                } else {
+                    // Simulation mode: pick a random mock device
+                    const device = mockDevices[Math.floor(Math.random() * mockDevices.length)];
+                    sellDeviceName = device.name;
+                    sellBasePrice = device.price;
+                }
 
                 deviceField.textContent = sellDeviceName;
                 deviceField.className = "font-bold text-emerald-500 dark:text-emerald-400 text-xs";

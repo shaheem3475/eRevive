@@ -50,6 +50,10 @@ const getUserProfile = async (req, res, next) => {
             .sort({ createdAt: -1 })
             .limit(10);
 
+        const totalDonationsCount = await DonationRequest.countDocuments({ user: user._id });
+        const totalSalesCount = await SellDevice.countDocuments({ user: user._id });
+        const totalRecyclesCount = await RecycleRequest.countDocuments({ user: user._id });
+
         res.status(200).json({
             success: true,
             data: {
@@ -57,6 +61,9 @@ const getUserProfile = async (req, res, next) => {
                 recentActivities,
                 pendingPickupsCount,
                 completedRecycleCount,
+                totalDonationsCount,
+                totalSalesCount,
+                totalRecyclesCount,
                 donationHistory,
                 recycleHistory,
                 sellHistory,
