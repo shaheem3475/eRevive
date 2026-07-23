@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eRevive - Premium Circular E-Waste Management Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <!-- Global CSS for fonts and custom styles -->
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            500: '#16a34a',
+                            600: '#15803d',
+                            700: '#166534',
+                            900: '#14532d',
+                        },
+                        secondary: '#22c55e',
+                        accent: '#0ea5e9',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+</head>
+
+<body
+    class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 min-h-screen flex flex-col transition-colors duration-300 relative overflow-x-hidden">
+
+    <!-- Dynamic Background Blobs -->
+    <div
+        class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-primary-200/20 dark:bg-primary-900/10 rounded-full blur-[120px] animate-blob pointer-events-none z-0">
+    </div>
+    <div class="absolute top-[40%] right-[-10%] w-[45vw] h-[45vw] bg-accent/15 dark:bg-sky-950/10 rounded-full blur-[100px] animate-blob pointer-events-none z-0"
+        style="animation-delay: 4s;"></div>
+    <div class="absolute bottom-[-10%] left-[10%] w-[40vw] h-[40vw] bg-secondary/10 dark:bg-emerald-950/10 rounded-full blur-[120px] animate-blob pointer-events-none z-0"
+        style="animation-delay: 8s;"></div>
+
+    <!-- Premium Navigation Bar -->
+    <nav
+        class="sticky top-0 z-50 glass-card px-6 py-4 mx-4 my-2 rounded-2xl flex justify-between items-center transition-all duration-300 shadow-sm border border-slate-200/50 dark:border-slate-800/50">
+        <a href="#hero" class="flex items-center space-x-2 z-10">
+            <img alt="eRevive logo" class="h-9 w-auto dark:brightness-200 hover:opacity-90 transition-opacity"
+                src="eRevive (1).png" />
+        </a>
+        <div
+            class="hidden md:flex items-center space-x-8 text-sm font-semibold text-slate-600 dark:text-slate-300 z-10">
+            <a class="hover:text-primary-500 transition-colors" href="#hero">Home</a>
+            <a class="hover:text-primary-500 transition-colors" href="#about">About</a>
+            <a class="hover:text-primary-500 transition-colors" href="#timeline">How it Works</a>
+            <a class="hover:text-primary-500 transition-colors" href="#impact">Environmental Impact</a>
+            <a class="hover:text-primary-500 transition-colors" href="#faq">FAQ</a>
+            <a class="hover:text-primary-500 transition-colors" href="#contact">Contact</a>
+        </div>
+
+        <div class="flex items-center space-x-4 z-10">
+            <!-- Theme Toggle Button -->
+            <button onclick="toggleTheme()"
+                class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/60 dark:border-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all shadow-sm"
+                title="Toggle Theme">
+                <i class="fa-solid fa-moon dark:hidden text-slate-500"></i>
+                <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
+            </button>
+            <button onclick="openModal('login')"
+                class="text-slate-700 dark:text-slate-300 hover:text-primary-500 font-semibold px-4 py-2 text-sm transition-all"
+                id="nav-login-btn">Login</button>
+            <button onclick="openModal('signup')"
+                class="bg-primary-500 hover:bg-primary-600 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40 hover:-translate-y-0.5 transition-all text-sm"
+                id="nav-signup-btn">Get Started</button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <main id="hero"
+        class="flex-grow max-w-7xl mx-auto px-6 lg:px-8 py-16 md:py-24 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
+        <div class="lg:col-span-7 space-y-8 animate-fade-in text-left">
+            <div
+                class="inline-flex items-center space-x-2 bg-primary-100 dark:bg-primary-950/50 text-primary-700 dark:text-primary-300 border border-primary-200/50 dark:border-primary-900/50 px-4 py-1.5 rounded-full text-xs font-semibold shadow-sm">
+                <i class="fa-solid fa-leaf text-primary-500"></i>
+                <span>Revolutionizing E-Waste Management</span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                Tech Waste?<br>
+                <span
+                    class="bg-gradient-to-r from-primary-500 via-secondary to-accent bg-clip-text text-transparent">Make
+                    it Eco Friendly.</span>
+            </h1>
+            <p class="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl">
+                Turn your retired electronics into sustainable resources. eRevive is a clean, automated dashboard to
+                sell, recycle, or donate circular gadgets. Protect the planet and earn points.
+            </p>
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 pt-2">
+                <button onclick="openModal('signup')"
+                    class="bg-primary-500 hover:bg-primary-600 text-white text-center font-bold px-8 py-4 rounded-xl shadow-xl shadow-primary-500/10 hover:shadow-primary-500/30 transition-all hover-lift text-sm tracking-wide">
+                    Recycle & Earn Now
+                </button>
+                <a href="#impact"
+                    class="border border-slate-200 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-900 text-slate-800 dark:text-slate-300 text-center font-semibold px-8 py-4 rounded-xl transition-all text-sm backdrop-blur-md">
+                    Read Impact Stories
+                </a>
+            </div>
+        </div>
+        <div class="lg:col-span-5 flex justify-center items-center animate-float select-none">
+            <div class="relative w-full max-w-md">
+                <div
+                    class="absolute -inset-1 rounded-[2.5rem] bg-gradient-to-tr from-primary-500 to-accent opacity-15 blur-2xl">
+                </div>
+                <img alt="Illustration of people recycling e-waste"
+                    class="relative w-full h-auto rounded-[2rem] border border-white/20 dark:border-slate-900/50 shadow-2xl object-cover"
+                    src="pngtree-people-trow-old-gadget-in-e-waste-bin-picture-image_8357367.png" />
+            </div>
+        </div>
+    </main>
+
+    <!-- Statistics Section -->
+    <section class="max-w-7xl mx-auto px-6 py-12 relative z-10 w-full">
+        <div class="glass-card rounded-[2rem] border border-slate-200/50 dark:border-slate-800/50 p-10 shadow-lg">
+            <div
+                class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-slate-200/60 dark:divide-slate-800/60">
+                <div class="space-y-2 py-4 md:py-0">
+                    <i class="fa-solid fa-dumpster-fire text-primary-500 text-3xl mb-2"></i>
+                    <div class="text-4xl font-black text-slate-900 dark:text-white" id="stat-waste">41,800 kg</div>
+                    <p class="text-sm font-semibold text-slate-500 dark:text-slate-400">E-Waste Safely Diverted</p>
+                </div>
+                <div class="space-y-2 py-4 md:py-0">
+                    <i class="fa-solid fa-gift text-accent text-3xl mb-2"></i>
+                    <div class="text-4xl font-black text-slate-900 dark:text-white" id="stat-rewards">1,280,000</div>
+                    <p class="text-sm font-semibold text-slate-500 dark:text-slate-400">Eco Points Distributed</p>
+                </div>
+                <div class="space-y-2 py-4 md:py-0">
+                    <i class="fa-solid fa-cloud-arrow-down text-emerald-500 text-3xl mb-2"></i>
+                    <div class="text-4xl font-black text-slate-900 dark:text-white" id="stat-co2">119,500 kg</div>
+                    <p class="text-sm font-semibold text-slate-500 dark:text-slate-400">CO₂ Emissions Offset</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About / Features Grid Section -->
+    <section id="about" class="max-w-7xl mx-auto px-6 py-20 relative z-10">
+        <div class="text-center space-y-4 max-w-3xl mx-auto mb-16">
+            <span
+                class="text-xs uppercase font-extrabold tracking-widest text-primary-500 bg-primary-100 dark:bg-primary-950/40 px-3.5 py-1.5 rounded-full">Explore
+                Ecosystem</span>
+            <h2 class="text-4xl font-bold text-slate-900 dark:text-white leading-tight">One Portal, Comprehensive
+                Solutions</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">
+                eRevive bridges the digital divide and promotes green circular habits by consolidating retired gadget
+                assessment, mapping collection boxes, and rewarding points.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Card 1 -->
+            <div
+                class="glass-card p-8 rounded-[2rem] hover-lift border border-slate-200/50 dark:border-slate-800/50 space-y-6">
+                <span
+                    class="w-12 h-12 rounded-2xl bg-primary-100 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 flex items-center justify-center text-xl shrink-0"><i
+                        class="fa-solid fa-robot"></i></span>
+                <div class="space-y-2">
+                    <h3 class="font-bold text-slate-900 dark:text-white text-base">AI-Powered Assistant</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Chat dynamically to resolve
+                        queries regarding points calculation, hazardous heavy metal components, and disposal safety
+                        guidelines.</p>
+                </div>
+            </div>
+            <!-- Card 2 -->
+            <div
+                class="glass-card p-8 rounded-[2rem] hover-lift border border-slate-200/50 dark:border-slate-800/50 space-y-6">
+                <span
+                    class="w-12 h-12 rounded-2xl bg-accent/10 text-accent flex items-center justify-center text-xl shrink-0"><i
+                        class="fa-solid fa-map-location-dot"></i></span>
+                <div class="space-y-2">
+                    <h3 class="font-bold text-slate-900 dark:text-white text-base">Drop-off Bin Locator</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Enter geolocation queries to
+                        find nearby official e-waste drop-off containers or green collection bins with routing details.
+                    </p>
+                </div>
+            </div>
+            <!-- Card 3 -->
+            <div
+                class="glass-card p-8 rounded-[2rem] hover-lift border border-slate-200/50 dark:border-slate-800/50 space-y-6">
+                <span
+                    class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0"><i
+                        class="fa-solid fa-truck-pickup"></i></span>
+                <div class="space-y-2">
+                    <h3 class="font-bold text-slate-900 dark:text-white text-base">Pickup Scheduler</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Book a collection request.
+                        Choose coordinates on the leaflet map tracker and calculate distance pickup fees instantly.</p>
+                </div>
+            </div>
+            <!-- Card 4 -->
+            <div
+                class="glass-card p-8 rounded-[2rem] hover-lift border border-slate-200/50 dark:border-slate-800/50 space-y-6">
+                <span
+                    class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl shrink-0"><i
+                        class="fa-solid fa-hand-holding-dollar"></i></span>
+                <div class="space-y-2">
+                    <h3 class="font-bold text-slate-900 dark:text-white text-base">AI Hardware Assessor</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Simulate device inspection
+                        camera sweeps, select custom wear defects, and lock cash estimates with reward points.</p>
+                </div>
+            </div>
+            <!-- Card 5 -->
+            <div
+                class="glass-card p-8 rounded-[2rem] hover-lift border border-slate-200/50 dark:border-slate-800/50 space-y-6">
+                <span
+                    class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl shrink-0"><i
+                        class="fa-solid fa-book-open"></i></span>
+                <div class="space-y-2">
+                    <h3 class="font-bold text-slate-900 dark:text-white text-base">E-Waste Education</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Read curated summaries
+                        regarding hardware recycling metrics, environmental carbon calculations, and circular loops.</p>
+                </div>
+            </div>
+            <!-- Card 6 -->
+            <div
+                class="glass-card p-8 rounded-[2rem] hover-lift border border-slate-200/50 dark:border-slate-800/50 space-y-6">
+                <span
+                    class="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xl shrink-0"><i
+                        class="fa-solid fa-hand-holding-heart"></i></span>
+                <div class="space-y-2">
+                    <h3 class="font-bold text-slate-900 dark:text-white text-base">Gadget Donation Loops</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Directly donate functional
+                        laptops or mobile screens. Bring tech to schools, classrooms, and community organizations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- "How It Works" Timeline Section -->
+    <section id="timeline"
+        class="max-w-6xl mx-auto px-6 py-20 relative z-10 border-t border-slate-200/40 dark:border-slate-800/40">
+        <div class="text-center space-y-4 max-w-2xl mx-auto mb-16">
+            <span
+                class="text-xs uppercase font-extrabold tracking-widest text-accent bg-sky-100 dark:bg-sky-950/40 px-3.5 py-1.5 rounded-full">Process
+                Flow</span>
+            <h2 class="text-4xl font-bold text-slate-900 dark:text-white">Seamless Step-by-Step Recycling</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+            <!-- Step 1 -->
+            <div class="space-y-4 relative timeline-dot">
+                <div
+                    class="w-10 h-10 rounded-xl bg-primary-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-primary-500/20">
+                    1</div>
+                <h3 class="font-bold text-slate-900 dark:text-white text-base">Scan & Evaluate</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Open the portal camera scanner
+                    tools or upload specs images to detect device base metrics.</p>
+            </div>
+            <!-- Step 2 -->
+            <div class="space-y-4 relative timeline-dot">
+                <div
+                    class="w-10 h-10 rounded-xl bg-accent text-white flex items-center justify-center font-bold text-sm shadow-md shadow-sky-500/20">
+                    2</div>
+                <h3 class="font-bold text-slate-900 dark:text-white text-base">Assess & Deduct</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Specify device defects (scratch,
+                    battery, dent) to estimate cash valuation and eco bonus points.</p>
+            </div>
+            <!-- Step 3 -->
+            <div class="space-y-4 relative timeline-dot">
+                <div
+                    class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-emerald-500/20">
+                    3</div>
+                <h3 class="font-bold text-slate-900 dark:text-white text-base">Coordinate Pickup</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Set your address pin coordinates
+                    on the leaflet maps panel, estimate distance fees, and confirm.</p>
+            </div>
+            <!-- Step 4 -->
+            <div class="space-y-4 relative timeline-item-last">
+                <div
+                    class="w-10 h-10 rounded-xl bg-purple-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-purple-500/20">
+                    4</div>
+                <h3 class="font-bold text-slate-900 dark:text-white text-base">Redeem & Plant</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Earn points, progress from silver
+                    to gold tier, and claim Zomato or Amazon vouchers.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Environmental Impact Stories Section -->
+    <section id="impact"
+        class="max-w-5xl mx-auto px-6 py-20 relative z-10 border-t border-slate-200/40 dark:border-slate-800/40">
+        <div class="text-center max-w-2xl mx-auto mb-16 space-y-4">
+            <span
+                class="text-xs uppercase font-extrabold tracking-widest text-emerald-500 bg-emerald-100 dark:bg-emerald-950/40 px-3.5 py-1.5 rounded-full">Eco
+                Impact</span>
+            <h2 class="text-4xl font-bold text-slate-900 dark:text-white">Transforming E-Waste into Solutions</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Proper hardware recycling conserves rare resources,
+                locks landfill toxins, and offsets carbon footprints.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+            <div class="space-y-6 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                <div class="space-y-2">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center"><i
+                            class="fa-solid fa-circle-check text-primary-500 mr-2 text-xs"></i> Component Recovery</h3>
+                    <p class="text-xs pl-6">Recycling extracts raw gold, copper, and platinum from circuit boards,
+                        reducing mining demand.</p>
+                </div>
+                <div class="space-y-2">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center"><i
+                            class="fa-solid fa-circle-check text-primary-500 mr-2 text-xs"></i> Defect Refurbishing Loop
+                    </h3>
+                    <p class="text-xs pl-6">Repairing screens or replacing weak batteries keeps tech circulating in
+                        schools rather than going to dumpsters.</p>
+                </div>
+                <div class="space-y-2">
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center"><i
+                            class="fa-solid fa-circle-check text-primary-500 mr-2 text-xs"></i> Toxins Isolation</h3>
+                    <p class="text-xs pl-6">Neutralizes heavy metals (lead, cadmium, mercury) before they pollute
+                        groundwater tables.</p>
+                </div>
+            </div>
+
+            <!-- Visual statistics summary card -->
+            <div class="glass-card rounded-3xl p-8 border border-slate-200/50 dark:border-slate-800/50 space-y-6">
+                <h4 class="font-extrabold text-slate-900 dark:text-white text-base">Why Circular Economy Matters</h4>
+                <div class="space-y-4">
+                    <div
+                        class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-3 text-xs">
+                        <span class="text-slate-500 font-semibold">Toxins Isolated</span>
+                        <span class="text-emerald-500 font-bold">100% Certified Safe</span>
+                    </div>
+                    <div
+                        class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-3 text-xs">
+                        <span class="text-slate-500 font-semibold">Carbon Offset Equivalency</span>
+                        <span class="text-primary-500 font-bold">119.5 Tons saved</span>
+                    </div>
+                    <div
+                        class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60 pb-3 text-xs">
+                        <span class="text-slate-500 font-semibold">Device Lifetime Extension</span>
+                        <span class="text-accent font-bold">+2.4 years average</span>
+                    </div>
+                    <div class="flex items-center justify-between pb-1 text-xs">
+                        <span class="text-slate-500 font-semibold">Community Donation Gifting</span>
+                        <span class="text-purple-500 font-bold">840+ gadgets sent</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section
+        class="bg-slate-100/50 dark:bg-slate-900/30 py-20 px-6 relative z-10 border-t border-slate-200/40 dark:border-slate-800/40">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center max-w-2xl mx-auto mb-16 space-y-4">
+                <span
+                    class="text-xs uppercase font-extrabold tracking-widest text-primary-500 bg-primary-100 dark:bg-primary-950/40 px-3.5 py-1.5 rounded-full font-sans">Reviews</span>
+                <h2 class="text-4xl font-bold text-slate-900 dark:text-white font-outfit">Verified User Experience</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div
+                    class="glass-card p-8 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 space-y-6 shadow-sm">
+                    <div class="flex text-amber-400 space-x-1 text-xs">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                            class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                            class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="text-slate-600 dark:text-slate-400 italic text-xs leading-relaxed">"I had three old
+                        laptops lying in the closet. eRevive estimated a price, picked them up the next day, and I
+                        redeemed points for a shopping voucher! Brilliant initiative."</p>
+                    <div class="flex items-center space-x-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300 flex items-center justify-center font-bold text-xs">
+                            S</div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 dark:text-white text-xs">Salahuddin K.</h4>
+                            <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Verified User
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="glass-card p-8 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 space-y-6 shadow-sm">
+                    <div class="flex text-amber-400 space-x-1 text-xs">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                            class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                            class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="text-slate-600 dark:text-slate-400 italic text-xs leading-relaxed">"The nearest waste bin
+                        finder led me straight to an eco-hub just 500 meters from my office. Extremely convenient and
+                        easy to use."</p>
+                    <div class="flex items-center space-x-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center font-bold text-xs">
+                            A</div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 dark:text-white text-xs">Ananya R.</h4>
+                            <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Verified User
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="glass-card p-8 rounded-3xl border border-slate-200/50 dark:border-slate-800/50 space-y-6 shadow-sm">
+                    <div class="flex text-amber-400 space-x-1 text-xs">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                            class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
+                            class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="text-slate-600 dark:text-slate-400 italic text-xs leading-relaxed">"Our office cleared out
+                        old screens and server racks. The pick-up service was smooth, and we got a corporate
+                        sustainability certificate."</p>
+                    <div class="flex items-center space-x-4">
+                        <div
+                            class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs">
+                            M</div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 dark:text-white text-xs">Marcus T.</h4>
+                            <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">IT Director</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Accordion Section -->
+    <section id="faq"
+        class="max-w-4xl mx-auto px-6 py-20 relative z-10 border-t border-slate-200/40 dark:border-slate-800/40">
+        <div class="text-center space-y-4 max-w-2xl mx-auto mb-16">
+            <span
+                class="text-xs uppercase font-extrabold tracking-widest text-primary-500 bg-primary-100 dark:bg-primary-950/40 px-3.5 py-1.5 rounded-full">Help
+                Center</span>
+            <h2 class="text-4xl font-bold text-slate-900 dark:text-white">Frequently Asked Questions</h2>
+        </div>
+
+        <div class="space-y-4">
+            <!-- Accordion 1 -->
+            <div
+                class="glass-card rounded-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm transition-all duration-300">
+                <button onclick="toggleFaq(1)"
+                    class="w-full px-6 py-4 flex justify-between items-center text-left font-bold text-slate-800 dark:text-slate-200 text-sm focus:outline-none">
+                    <span>How does eRevive calculate the price of my device?</span>
+                    <i class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-300"
+                        id="faq-chevron-1"></i>
+                </button>
+                <div class="hidden px-6 pb-5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed transition-all duration-300"
+                    id="faq-answer-1">
+                    We use a base evaluation offer depending on your device model. When checking assessment checkboxes
+                    (scratches, dented frame, weak battery), set deductions apply. You can also write down custom
+                    defects, which apply a flat valuation deduction.
+                </div>
+            </div>
+            <!-- Accordion 2 -->
+            <div
+                class="glass-card rounded-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm transition-all duration-300">
+                <button onclick="toggleFaq(2)"
+                    class="w-full px-6 py-4 flex justify-between items-center text-left font-bold text-slate-800 dark:text-slate-200 text-sm focus:outline-none">
+                    <span>What happens to e-waste after it is picked up?</span>
+                    <i class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-300"
+                        id="faq-chevron-2"></i>
+                </button>
+                <div class="hidden px-6 pb-5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed transition-all duration-300"
+                    id="faq-answer-2">
+                    Retired devices are inspected by our engineers. Functional parts are reclaimed to assemble working
+                    computers for donations. Obsolete components are sent to authorized recycling plants where heavy
+                    metals are neutralized and precious gold/copper is isolated.
+                </div>
+            </div>
+            <!-- Accordion 3 -->
+            <div
+                class="glass-card rounded-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm transition-all duration-300">
+                <button onclick="toggleFaq(3)"
+                    class="w-full px-6 py-4 flex justify-between items-center text-left font-bold text-slate-800 dark:text-slate-200 text-sm focus:outline-none">
+                    <span>How can I redeem my Eco Points?</span>
+                    <i class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-300"
+                        id="faq-chevron-3"></i>
+                </button>
+                <div class="hidden px-6 pb-5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed transition-all duration-300"
+                    id="faq-answer-3">
+                    Head to the Rewards Hub in the console. You can swap accumulated points for Amazon cards, Zomato
+                    meal discounts, Uber ride coupon codes, or plant trees. Redeeming automatically deducts points from
+                    your session balance and prints coupon codes.
+                </div>
+            </div>
+            <!-- Accordion 4 -->
+            <div
+                class="glass-card rounded-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-hidden shadow-sm transition-all duration-300">
+                <button onclick="toggleFaq(4)"
+                    class="w-full px-6 py-4 flex justify-between items-center text-left font-bold text-slate-800 dark:text-slate-200 text-sm focus:outline-none">
+                    <span>Can I recycle heavy electronics like old monitors or CRT displays?</span>
+                    <i class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-300"
+                        id="faq-chevron-4"></i>
+                </button>
+                <div class="hidden px-6 pb-5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed transition-all duration-300"
+                    id="faq-answer-4">
+                    Yes! You can recycle large e-waste items. When selecting pickup on the Leaflet coordinates tracker,
+                    the system schedules an eco-agent who verifies weight metrics. You earn points based on weight.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Form Section -->
+    <section id="contact"
+        class="max-w-7xl mx-auto px-6 py-20 relative z-10 border-t border-slate-200/40 dark:border-slate-800/40">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
+            <div class="md:col-span-5 space-y-6">
+                <div class="space-y-2">
+                    <span
+                        class="text-xs uppercase font-extrabold tracking-widest text-primary-500 bg-primary-100 dark:bg-primary-950/40 px-3.5 py-1.5 rounded-full">Contact
+                        Support</span>
+                    <h2 class="text-4xl font-extrabold text-slate-900 dark:text-white pt-2">Let's talk.</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs">Have questions about e-waste disposal,
+                        partnerships, or corporate pickups? Contact our staff.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div
+                        class="glass-card p-5 rounded-2xl flex items-center space-x-4 border border-slate-200/50 dark:border-slate-800/50">
+                        <span
+                            class="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-950/40 text-primary-500 flex items-center justify-center shrink-0 text-sm">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </span>
+                        <div>
+                            <h4
+                                class="font-bold text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider">
+                                Address</h4>
+                            <p class="text-xs text-slate-800 dark:text-slate-200 font-semibold">123 Green Street, Delhi
+                            </p>
+                        </div>
+                    </div>
+                    <div
+                        class="glass-card p-5 rounded-2xl flex items-center space-x-4 border border-slate-200/50 dark:border-slate-800/50">
+                        <span
+                            class="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-950/40 text-primary-500 flex items-center justify-center shrink-0 text-sm">
+                            <i class="fa-solid fa-phone"></i>
+                        </span>
+                        <div>
+                            <h4
+                                class="font-bold text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider">
+                                Phone</h4>
+                            <p class="text-xs text-slate-800 dark:text-slate-200 font-semibold">+91 9876543210</p>
+                        </div>
+                    </div>
+                    <div
+                        class="glass-card p-5 rounded-2xl flex items-center space-x-4 border border-slate-200/50 dark:border-slate-800/50">
+                        <span
+                            class="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-950/40 text-primary-500 flex items-center justify-center shrink-0 text-sm">
+                            <i class="fa-solid fa-envelope"></i>
+                        </span>
+                        <div>
+                            <h4
+                                class="font-bold text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider">
+                                Email</h4>
+                            <p class="text-xs text-slate-800 dark:text-slate-200 font-semibold">support@erevive.com</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <div class="md:col-span-7">
+                <form onsubmit="handleContactSubmit(event)"
+                    class="glass-card p-8 rounded-[2rem] border border-slate-200/50 dark:border-slate-800/50 space-y-4 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Send us a Message</h3>
+                    <div>
+                        <label
+                            class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
+                            for="contact-name">Your Name</label>
+                        <input required
+                            class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input"
+                            id="contact-name" placeholder="Salahuddin" type="text" />
+                    </div>
+                    <div>
+                        <label
+                            class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
+                            for="contact-email">Your Email</label>
+                        <input required
+                            class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input"
+                            id="contact-email" placeholder="name@domain.com" type="email" />
+                    </div>
+                    <div>
+                        <label
+                            class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
+                            for="contact-message">Message</label>
+                        <textarea required
+                            class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none h-32 glass-input"
+                            id="contact-message" placeholder="Write your query here..."></textarea>
+                    </div>
+                    <button type="submit"
+                        class="w-full py-3.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg transition-colors uppercase tracking-wider text-xs">
+                        Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer
+        class="bg-slate-900 text-slate-400 dark:bg-slate-950 py-16 px-6 border-t border-slate-200/50 dark:border-slate-800/50 relative z-10">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="space-y-4">
+                <img alt="eRevive logo" class="h-9 w-auto brightness-200" src="eRevive (1).png" />
+                <p class="text-xs leading-relaxed text-slate-500">Simplifying tech recycling, creating a cleaner planet,
+                    and rewarding you for doing the right thing.</p>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold text-sm mb-4">Quick Links</h4>
+                <ul class="space-y-2 text-xs">
+                    <li><a class="hover:text-white transition-colors" href="#hero">Home</a></li>
+                    <li><a class="hover:text-white transition-colors" href="#about">About Us</a></li>
+                    <li><a class="hover:text-white transition-colors" href="#timeline">How it Works</a></li>
+                    <li><a class="hover:text-white transition-colors" href="#faq">FAQ</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold text-sm mb-4">Legal</h4>
+                <ul class="space-y-2 text-xs">
+                    <li><a class="hover:text-white transition-colors" href="#">Privacy Policy</a></li>
+                    <li><a class="hover:text-white transition-colors" href="#">Terms of Service</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold text-sm mb-4">Connect</h4>
+                <div class="flex space-x-4 text-lg">
+                    <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-x-twitter"></i></a>
+                    <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="hover:text-white transition-colors"><i class="fa-brands fa-linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto border-t border-slate-800 mt-12 pt-8 text-center text-xs text-slate-600">
+            <p>&copy; 2026 eRevive. All rights reserved. Made with <i class="fa-solid fa-heart text-emerald-500"></i>
+                for a Greener Tomorrow.</p>
+        </div>
+    </footer>
+
+    <!-- Login / Signup Modal -->
+    <div id="login-modal"
+        class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-md w-full shadow-2xl animate-fade-in border border-slate-200/50 dark:border-slate-800/80 relative">
+            <button onclick="toggleLoginModal(false)"
+                class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl transition-colors">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Modal Tabs -->
+            <div class="flex border-b border-slate-100 dark:border-slate-800/60 mb-6">
+                <button onclick="switchModalTab('login')" id="tab-login"
+                    class="flex-grow pb-3 text-sm font-bold border-b-2 border-primary-500 text-slate-900 dark:text-white">
+                    Login
+                </button>
+                <button onclick="switchModalTab('signup')" id="tab-signup"
+                    class="flex-grow pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+                    Sign Up
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="form-login" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                <div>
+                    <label
+                        class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
+                        for="login-email">Email Address</label>
+                    <input required
+                        class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input"
+                        id="login-email" placeholder="name@domain.com" type="email" value="salahuddin@erevive.com" />
+                </div>
+                <div>
+                    <label
+                        class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
+                        for="login-password">Password</label>
+                    <input required
+                        class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input"
+                        id="login-password" placeholder="••••••••" type="password" value="password123" />
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <label class="flex items-center space-x-2 text-slate-500 cursor-pointer font-medium">
+                        <input type="checkbox"
+                            class="rounded border-slate-300 text-primary-500 focus:ring-primary-500" />
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#" class="text-primary-500 hover:underline font-semibold">Forgot Password?</a>
+                </div>
+                <button type="submit"
+                    class="w-full py-3.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg transition-colors uppercase tracking-wider text-xs mt-2">
+                    Sign In
+                </button>
+                <div class="relative flex items-center justify-center my-3 text-slate-400">
+                    <span
+                        class="absolute px-3 bg-white dark:bg-slate-900 text-[10px] uppercase font-bold tracking-wider">or</span>
+                    <div class="w-full border-t border-slate-100 dark:border-slate-800/80"></div>
+                </div>
+                <button type="button" onclick="handleGoogleLogin()"
+                    class="w-full py-2.5 bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold rounded-xl text-xs flex items-center justify-center space-x-2 transition-all border border-slate-200/50 dark:border-slate-700">
+                    <i class="fa-brands fa-google text-red-500"></i>
+                    <span>Continue with Google</span>
+                </button>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="form-signup" onsubmit="handleSignupSubmit(event)" class="hidden space-y-4">
+                <div>
+                    <label
+                        class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
+                        for="signup-name">Full Name</label>
+                    <input required
+                        class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input"
+                        id="signup-name" placeholder="Salahuddin" type="text" />
+                </div>
+                <div>
+                    <label
+                        class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
+                        for="signup-email">Email Address</label>
+                    <input required
+                        class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input"
+                        id="signup-email" placeholder="name@domain.com" type="email" />
+                </div>
+                <div>
+                    <label
+                        class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5"
+                        for="signup-password">Password</label>
+                    <input required
+                        class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input"
+                        id="signup-password" placeholder="Min. 8 characters" type="password" />
+                </div>
+                <label class="flex items-start space-x-2 text-xs text-slate-500 cursor-pointer font-medium">
+                    <input required type="checkbox"
+                        class="rounded border-slate-300 text-primary-500 focus:ring-primary-500 mt-0.5" />
+                    <span>I agree to the <a href="#" class="text-primary-500 hover:underline">Terms</a> & <a href="#"
+                            class="text-primary-500 hover:underline">Privacy Policy</a></span>
+                </label>
+                <button type="submit"
+                    class="w-full py-3.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg transition-colors uppercase tracking-wider text-xs mt-2">
+                    Create Account
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Contact Message Sent Modal -->
+    <div id="contact-success-modal"
+        class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-sm w-full text-center space-y-6 shadow-2xl animate-fade-in border border-slate-200/50 dark:border-slate-800/80">
+            <div
+                class="w-20 h-20 rounded-full bg-primary-100 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 mx-auto flex items-center justify-center text-4xl shadow-inner">
+                <i class="fa-solid fa-paper-plane animate-bounce"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">Contact Form Unavailable</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">This demo does not send messages yet. Please use
+                    the contact details shown on this page.</p>
+            </div>
+            <button onclick="closeContactModal()"
+                class="w-full py-3.5 bg-primary-500 text-white font-bold rounded-xl shadow-lg hover:bg-primary-600 transition-colors text-xs uppercase tracking-wider">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- Javascript Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Theme setup
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.documentElement.classList.add("dark");
+            } else {
+                document.documentElement.classList.remove("dark");
+            }
+
+            // Stats Count Up Animation
+            const countUp = (id, target, prefix = "", suffix = "") => {
+                let start = target - 100;
+                const duration = 2000;
+                const intervalTime = 30;
+                const steps = duration / intervalTime;
+                const increment = (target - start) / steps;
+
+                const element = document.getElementById(id);
+                if (!element) return;
+                const timer = setInterval(() => {
+                    start += increment;
+                    if (start >= target) {
+                        clearInterval(timer);
+                        element.textContent = prefix + Math.round(target).toLocaleString() + suffix;
+                    } else {
+                        element.textContent = prefix + Math.round(start).toLocaleString() + suffix;
+                    }
+                }, intervalTime);
+            };
+
+            // Run counters
+            countUp("stat-waste", 42390, "", " kg");
+            countUp("stat-rewards", 1284500, "", "");
+            countUp("stat-co2", 120400, "", " kg");
+        });
+
+        // Theme Toggle Controls
+        function toggleTheme() {
+            if (document.documentElement.classList.contains("dark")) {
+                document.documentElement.classList.remove("dark");
+            } else {
+                document.documentElement.classList.add("dark");
+            }
+        }
+
+        // FAQ Toggle Controls
+        function toggleFaq(id) {
+            const answer = document.getElementById(`faq-answer-${id}`);
+            const chevron = document.getElementById(`faq-chevron-${id}`);
+
+            if (answer.classList.contains("hidden")) {
+                answer.classList.remove("hidden");
+                chevron.classList.add("rotate-180");
+            } else {
+                answer.classList.add("hidden");
+                chevron.classList.remove("rotate-180");
+            }
+        }
+
+        // Modal Controls
+        function openModal(mode = 'login') {
+            document.getElementById("login-modal").classList.remove("hidden");
+            switchModalTab(mode);
+        }
+
+        function toggleLoginModal(show) {
+            const modal = document.getElementById("login-modal");
+            if (show) {
+                modal.classList.remove("hidden");
+            } else {
+                modal.classList.add("hidden");
+            }
+        }
+
+        function switchModalTab(tab) {
+            const tabLogin = document.getElementById("tab-login");
+            const tabSignup = document.getElementById("tab-signup");
+            const formLogin = document.getElementById("form-login");
+            const formSignup = document.getElementById("form-signup");
+
+            if (tab === 'login') {
+                tabLogin.className = "flex-grow pb-3 text-sm font-bold border-b-2 border-primary-500 text-slate-900 dark:text-white";
+                tabSignup.className = "flex-grow pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300";
+                formLogin.classList.remove("hidden");
+                formSignup.classList.add("hidden");
+            } else {
+                tabSignup.className = "flex-grow pb-3 text-sm font-bold border-b-2 border-primary-500 text-slate-900 dark:text-white";
+                tabLogin.className = "flex-grow pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300";
+                formSignup.classList.remove("hidden");
+                formLogin.classList.add("hidden");
+            }
+        }
+
+        // Firebase Configuration Setup
+        let firebaseAuthInitialized = false;
+        const initializeFirebase = async () => {
+            if (firebaseAuthInitialized) return true;
+            const response = await fetch('http://localhost:5000/api/config/firebase');
+            const result = await response.json();
+            if (!result.success) throw new Error(result.message);
+            firebase.initializeApp(result.data);
+            firebaseAuthInitialized = true;
+            return true;
+        };
+
+        async function handleLoginSubmit(event) {
+            event.preventDefault();
+            const email = document.getElementById("login-email").value.trim();
+            const password = document.getElementById("login-password").value.trim();
+
+            let token;
+
+            try {
+                await initializeFirebase();
+                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                token = await userCredential.user.getIdToken();
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    window.location.href = "dashboard.html";
+                } else {
+                    alert("Authentication failed: " + result.message);
+                }
+            } catch (err) {
+                alert("Authentication failed: " + err.message);
+            }
+        }
+
+        async function handleSignupSubmit(event) {
+            event.preventDefault();
+            const name = document.getElementById("signup-name").value.trim();
+            const email = document.getElementById("signup-email").value.trim();
+            const password = document.getElementById("signup-password").value.trim();
+
+            let token;
+
+            try {
+                await initializeFirebase();
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                await userCredential.user.updateProfile({ displayName: name });
+                token = await userCredential.user.getIdToken(true);
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        fullName: name
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    window.location.href = "dashboard.html";
+                } else {
+                    alert("Registration failed: " + result.message);
+                }
+            } catch (err) {
+                alert("Registration failed: " + err.message);
+            }
+        }
+
+        async function handleGoogleLogin() {
+            try {
+                await initializeFirebase();
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const userCredential = await firebase.auth().signInWithPopup(provider);
+                const token = await userCredential.user.getIdToken();
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        fullName: userCredential.user.displayName || userCredential.user.email.split('@')[0]
+                    })
+                });
+                if (!(await response.json()).success) throw new Error('Unable to register account');
+                window.location.href = "dashboard.html";
+            } catch (error) { alert("Google authentication failed: " + error.message); }
+        }
+
+        function handleContactSubmit(event) {
+            event.preventDefault();
+            document.getElementById("contact-success-modal").classList.remove("hidden");
+        }
+
+        function closeContactModal() {
+            document.getElementById("contact-success-modal").classList.add("hidden");
+            document.getElementById("contact-name").value = "";
+            document.getElementById("contact-email").value = "";
+            document.getElementById("contact-message").value = "";
+        }
+    </script>
+</body>
+
+</html>

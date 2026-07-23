@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eRevive Console - Premium Circular Tech Management</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- Global CSS for fonts and custom styles -->
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            500: '#16a34a',
+                            600: '#15803d',
+                            700: '#166534',
+                            900: '#14532d',
+                        },
+                        secondary: '#22c55e',
+                        accent: '#0ea5e9',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <style>
+        #recycle-map, #locations-map {
+            height: 380px;
+            width: 100%;
+            border-radius: 1.5rem;
+            z-index: 10;
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+        .dark .skeleton {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 200% 100%;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 min-h-screen flex flex-col md:flex-row transition-colors duration-300 relative overflow-x-hidden">
+
+    <!-- Collapsible Sidebar for Desktop -->
+    <aside id="sidebar" class="hidden md:flex flex-col w-64 bg-slate-900 dark:bg-slate-950 text-slate-300 border-r border-slate-200/10 dark:border-slate-800/40 shrink-0 p-5 space-y-6 select-none sidebar-transition relative z-20">
+        
+        <!-- Logo Header & Collapse Button -->
+        <div class="flex items-center justify-between">
+            <a href="dashboard.html" class="flex items-center space-x-2 shrink-0">
+                <img id="sidebar-logo" alt="eRevive logo" class="h-8 w-auto brightness-200" src="eRevive (1).png"/>
+            </a>
+            <button onclick="toggleSidebar()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700/80 border border-slate-700/50 text-slate-400 flex items-center justify-center transition-all shadow-sm" title="Collapse Sidebar">
+                <i class="fa-solid fa-angles-left text-xs transition-transform duration-300" id="collapse-chevron"></i>
+            </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-grow space-y-1.5 pt-4">
+            <button onclick="switchTab('dashboard')" id="sidebar-dashboard" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-bold bg-primary-500 text-white transition-all shadow-lg shadow-primary-500/15">
+                <i class="fa-solid fa-chart-pie text-sm"></i>
+                <span class="sidebar-text">Dashboard</span>
+            </button>
+            <button onclick="switchTab('sell')" id="sidebar-sell" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800 hover:text-white transition-all">
+                <i class="fa-solid fa-hand-holding-dollar text-sm"></i>
+                <span class="sidebar-text">Sell Tech</span>
+            </button>
+            <button onclick="switchTab('recycle')" id="sidebar-recycle" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800 hover:text-white transition-all">
+                <i class="fa-solid fa-recycle text-sm"></i>
+                <span class="sidebar-text">Recycle E-Waste</span>
+            </button>
+            <button onclick="switchTab('donate')" id="sidebar-donate" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800 hover:text-white transition-all">
+                <i class="fa-solid fa-hands-holding-child text-sm"></i>
+                <span class="sidebar-text">Donate Tech</span>
+            </button>
+            <button onclick="switchTab('locations')" id="sidebar-locations" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800 hover:text-white transition-all">
+                <i class="fa-solid fa-map-location-dot text-sm"></i>
+                <span class="sidebar-text">Find Bins</span>
+            </button>
+            <button onclick="switchTab('rewards')" id="sidebar-rewards" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800 hover:text-white transition-all">
+                <i class="fa-solid fa-gift text-sm"></i>
+                <span class="sidebar-text">Rewards Hub</span>
+            </button>
+        </nav>
+
+        <!-- User Profile & Log Out Bottom Actions -->
+        <div class="border-t border-slate-800/80 pt-5 space-y-4">
+            <!-- Theme Toggle in Sidebar -->
+            <button onclick="toggleTheme()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700/80 border border-slate-700/50 rounded-xl text-xs font-semibold text-slate-300 flex items-center justify-center space-x-2 transition-all">
+                <i class="fa-solid fa-moon dark:hidden"></i>
+                <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
+                <span class="sidebar-text">Toggle Theme</span>
+            </button>
+            
+            <div class="flex items-center space-x-3 bg-slate-800/40 border border-slate-700/10 rounded-2xl p-3 shrink-0">
+                <div class="bg-primary-500 text-white rounded-xl w-8 h-8 flex items-center justify-center font-bold text-xs shrink-0 shadow-md">
+                    S
+                </div>
+                <div class="min-w-0 sidebar-text">
+                    <div class="text-[9px] text-slate-500 uppercase tracking-widest font-bold">User</div>
+                    <div class="text-xs font-bold text-white truncate" id="profile-name">Salahuddin</div>
+                </div>
+            </div>
+            <a href="javascript:handleLogout()" class="w-full py-2.5 bg-red-950/20 hover:bg-red-900/30 text-red-400 border border-red-900/10 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-2 transition-colors">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span class="sidebar-text">Log Out</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Mobile Navigation Top Header -->
+    <header class="md:hidden sticky top-0 z-50 glass-card px-4 py-3.5 mx-2 my-2 rounded-2xl flex justify-between items-center shadow-sm border border-slate-200/50 dark:border-slate-800/40 shrink-0">
+        <div class="flex items-center space-x-3">
+            <button onclick="toggleMobileSidebar()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 flex items-center justify-center border border-slate-200/50 dark:border-slate-800/40">
+                <i class="fa-solid fa-bars text-sm"></i>
+            </button>
+            <img alt="eRevive logo" class="h-7 w-auto dark:brightness-200" src="eRevive (1).png"/>
+        </div>
+        <div class="flex items-center space-x-3">
+            <!-- Points header badge -->
+            <button onclick="switchTab('rewards')" class="flex items-center bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400 px-3 py-1.5 rounded-xl font-black text-xs border border-primary-200/40 dark:border-primary-900/30">
+                <span class="mr-1">🎁</span>
+                <span class="header-points-display">500</span> pts
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Slide-out Menu Panel -->
+    <div id="mobile-sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 dark:bg-slate-950 text-slate-300 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col p-6 space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+            <img alt="eRevive logo" class="h-8 w-auto brightness-200" src="eRevive (1).png"/>
+            <button onclick="toggleMobileSidebar()" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <nav class="flex-grow space-y-1.5">
+            <button onclick="switchTab('dashboard'); toggleMobileSidebar();" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 text-white transition-all" id="mobile-nav-link-dashboard">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Dashboard</span>
+            </button>
+            <button onclick="switchTab('sell'); toggleMobileSidebar();" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800 text-white transition-all" id="mobile-nav-link-sell">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+                <span>Sell Tech</span>
+            </button>
+            <button onclick="switchTab('recycle'); toggleMobileSidebar();" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800 text-white transition-all" id="mobile-nav-link-recycle">
+                <i class="fa-solid fa-recycle"></i>
+                <span>Recycle E-Waste</span>
+            </button>
+            <button onclick="switchTab('donate'); toggleMobileSidebar();" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800 text-white transition-all" id="mobile-nav-link-donate">
+                <i class="fa-solid fa-hands-holding-child"></i>
+                <span>Donate Tech</span>
+            </button>
+            <button onclick="switchTab('locations'); toggleMobileSidebar();" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800 text-white transition-all" id="mobile-nav-link-locations">
+                <i class="fa-solid fa-map-location-dot"></i>
+                <span>Find Bins</span>
+            </button>
+            <button onclick="switchTab('rewards'); toggleMobileSidebar();" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800 text-white transition-all" id="mobile-nav-link-rewards">
+                <i class="fa-solid fa-gift"></i>
+                <span>Rewards Hub</span>
+            </button>
+        </nav>
+
+        <div class="border-t border-slate-800 pt-5 space-y-4">
+            <button onclick="toggleTheme(); toggleMobileSidebar();" class="w-full py-2.5 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-moon dark:hidden"></i>
+                <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
+                <span>Toggle Theme</span>
+            </button>
+            <a href="javascript:handleLogout()" class="w-full py-2.5 bg-red-950/20 text-red-400 border border-red-900/10 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Log Out</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Mobile Sidebar overlay backdrop -->
+    <div id="mobile-overlay" onclick="toggleMobileSidebar()" class="hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden"></div>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow flex flex-col min-w-0 md:h-screen md:overflow-y-auto px-4 md:px-8 py-6 pb-24 md:pb-6 relative z-10">
+        
+        <!-- Header row (Desktop Display State) -->
+        <div class="hidden md:flex justify-between items-center mb-8 shrink-0 select-none">
+            <div>
+                <h1 class="text-2xl font-black text-slate-900 dark:text-white font-outfit" id="current-tab-title">Portal Console</h1>
+                <p class="text-xs text-slate-400 mt-0.5 font-medium">Manage circular hardware actions.</p>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <button onclick="switchTab('rewards')" class="flex items-center bg-primary-50 dark:bg-primary-950/50 hover:bg-primary-100 dark:hover:bg-primary-950 text-primary-600 dark:text-primary-400 px-4 py-2 rounded-xl font-bold text-xs border border-primary-200/50 dark:border-primary-900/30 shadow-sm transition-all">
+                    <span class="mr-1.5">🎁</span>
+                    <span class="header-points-display">500</span> Eco Points
+                </button>
+                <div class="flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 shadow-sm">
+                    <div class="bg-primary-500 text-white rounded-lg w-7 h-7 flex items-center justify-center font-bold text-xs shadow-md">
+                        S
+                    </div>
+                    <span class="ml-2.5 text-slate-800 dark:text-slate-200 font-bold text-xs" id="header-username">Salahuddin</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab contents Panels -->
+        <div class="flex-grow flex flex-col justify-start">
+            
+            <!-- PANEL 1: DASHBOARD -->
+            <section id="tab-content-dashboard" class="tab-panel space-y-8 animate-fade-in">
+                <!-- User Welcome widgets -->
+                <div class="bg-gradient-to-tr from-slate-900 via-slate-800 to-primary-950 text-white rounded-[2rem] p-8 shadow-xl relative overflow-hidden border border-slate-700/20">
+                    <div class="absolute -right-6 -bottom-6 opacity-10 text-9xl">
+                        <i class="fa-solid fa-leaf"></i>
+                    </div>
+                    <div class="relative z-10 space-y-4">
+                        <span class="inline-flex items-center bg-primary-500/20 text-primary-400 border border-primary-500/30 px-3.5 py-1 rounded-full text-[10px] font-bold">
+                            <i class="fa-solid fa-medal mr-1.5 text-amber-400 animate-pulse"></i>
+                            <span>Tier Level: Silver Recycler</span>
+                        </span>
+                        <h2 class="text-3xl font-extrabold tracking-tight">Welcome back, <span class="welcome-user-name text-primary-400">Salahuddin</span>! 👋</h2>
+                        <p class="text-xs text-slate-300 max-w-lg leading-relaxed">
+                            You're doing fantastic! Your e-waste recycling contributions have saved carbon emissions and directly helped in planting trees. Keep it up!
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Stats widgets -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+                    <div class="glass-card p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 shadow-sm flex flex-col justify-between hover-lift">
+                        <span class="text-primary-500 text-lg mb-2 shrink-0"><i class="fa-solid fa-award"></i></span>
+                        <div class="mt-2">
+                            <div class="text-2xl font-black text-slate-900 dark:text-white points-display">500</div>
+                            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1">Eco Points Balance</div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 shadow-sm flex flex-col justify-between hover-lift">
+                        <span class="text-accent text-lg mb-2 shrink-0"><i class="fa-solid fa-weight-hanging"></i></span>
+                        <div class="mt-2">
+                            <div class="text-2xl font-black text-slate-900 dark:text-white">24.5 kg</div>
+                            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1">Weight Recycled</div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 shadow-sm flex flex-col justify-between hover-lift">
+                        <span class="text-emerald-500 text-lg mb-2 shrink-0"><i class="fa-solid fa-seedling"></i></span>
+                        <div class="mt-2">
+                            <div class="text-2xl font-black text-slate-900 dark:text-white">61.2 kg</div>
+                            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1">Carbon Offset</div>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 shadow-sm flex flex-col justify-between hover-lift">
+                        <span class="text-purple-500 text-lg mb-2 shrink-0"><i class="fa-solid fa-tree"></i></span>
+                        <div class="mt-2">
+                            <div class="text-2xl font-black text-slate-900 dark:text-white">4 Trees</div>
+                            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-1">Trees Planted</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chatbot row & Action Cards -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Actions -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <h3 class="text-sm uppercase font-black tracking-widest text-slate-400 dark:text-slate-500 flex items-center">
+                            <i class="fa-solid fa-circle-play text-primary-500 mr-2 text-xs"></i>
+                            Select Platform Operation
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <!-- Sell Products -->
+                            <div onclick="switchTab('sell')" class="glass-card p-6 rounded-2xl cursor-pointer hover-lift border-l-4 border-l-emerald-500 flex items-start space-x-4">
+                                <div class="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500 flex items-center justify-center text-sm shrink-0">
+                                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 dark:text-white text-sm mb-1">Sell Products</h4>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">Evaluate defective widgets, simulate scans, and redeem cashback.</p>
+                                </div>
+                            </div>
+                            <!-- Recycle E-Waste -->
+                            <div onclick="switchTab('recycle')" class="glass-card p-6 rounded-2xl cursor-pointer hover-lift border-l-4 border-l-primary-500 flex items-start space-x-4">
+                                <div class="w-11 h-11 rounded-xl bg-primary-50 dark:bg-primary-950/30 text-primary-500 flex items-center justify-center text-sm shrink-0">
+                                    <i class="fa-solid fa-recycle"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 dark:text-white text-sm mb-1">Recycle E-Waste</h4>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">Book collection pickup requests using Leaflet distance mappings.</p>
+                                </div>
+                            </div>
+                            <!-- Donate Products -->
+                            <div onclick="switchTab('donate')" class="glass-card p-6 rounded-2xl cursor-pointer hover-lift border-l-4 border-l-indigo-500 flex items-start space-x-4">
+                                <div class="w-11 h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-500 flex items-center justify-center text-sm shrink-0">
+                                    <i class="fa-solid fa-hands-holding-child"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 dark:text-white text-sm mb-1">Donate Products</h4>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">Pass functional electronics to charities. Keep circular tech active.</p>
+                                </div>
+                            </div>
+                            <!-- Find Waste Bins -->
+                            <div onclick="switchTab('locations')" class="glass-card p-6 rounded-2xl cursor-pointer hover-lift border-l-4 border-l-amber-500 flex items-start space-x-4">
+                                <div class="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-500 flex items-center justify-center text-sm shrink-0">
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 dark:text-white text-sm mb-1">Find Waste Bins</h4>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">View green collection dropbox coordinate pins on local map track.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chatbot Panel -->
+                    <div class="lg:col-span-1 flex flex-col">
+                        <div class="glass-card rounded-[2rem] overflow-hidden flex flex-col h-[400px] lg:h-[420px] shadow-lg border border-slate-200/50 dark:border-slate-800/40 flex-grow">
+                            <!-- Chatbot Header -->
+                            <div class="bg-slate-900 dark:bg-slate-950 p-4 text-white flex items-center space-x-3 shrink-0 border-b border-slate-800/60">
+                                <div class="w-9 h-9 rounded-xl bg-primary-500 flex items-center justify-center text-sm shadow-md">
+                                    <i class="fa-solid fa-robot"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-xs">eRevive Eco-Assistant</h4>
+                                    <div class="flex items-center space-x-1.5 text-[10px] text-slate-400">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        <span>Online • AI Agent</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Chatbot History -->
+                            <div class="flex-grow p-4 overflow-y-auto space-y-4 text-[11px] bg-slate-50/20 dark:bg-slate-900/10" id="chat-history">
+                                <div class="flex items-start space-x-2.5">
+                                    <div class="w-6 h-6 rounded-lg bg-slate-900 text-white flex items-center justify-center text-[10px] mt-0.5 shrink-0">
+                                        <i class="fa-solid fa-robot"></i>
+                                    </div>
+                                    <div class="bg-white dark:bg-slate-800/80 p-3 rounded-2xl rounded-tl-none border border-slate-200/50 dark:border-slate-850 text-slate-700 dark:text-slate-300 max-w-[85%] shadow-xs leading-relaxed">
+                                        Hi <span class="welcome-user-name">Salahuddin</span>! Ask me about:
+                                        <ul class="list-disc list-inside mt-1 text-[10px] space-y-0.5 text-primary-600 dark:text-primary-400 font-semibold">
+                                            <li>Points earnings rules</li>
+                                            <li>Recycling pickups</li>
+                                            <li>Hazardous heavy metals</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Chatbot Input -->
+                            <form onsubmit="handleChatSubmit(event)" class="p-3 border-t border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 flex items-center space-x-2 shrink-0">
+                                <input type="text" id="chat-input" placeholder="Ask a question..." class="flex-grow px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800/60 dark:bg-slate-950 text-xs focus:outline-none focus:border-primary-500 dark:text-white" required autocomplete="off"/>
+                                <button type="submit" class="bg-primary-500 text-white w-8 h-8 rounded-xl flex items-center justify-center hover:bg-primary-600 transition-colors shadow-sm shrink-0">
+                                    <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL 2: SELL TECH -->
+            <section id="tab-content-sell" class="tab-panel hidden space-y-8 animate-fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <!-- Assessor Panel Left -->
+                    <div class="lg:col-span-7 space-y-6">
+                        <div class="glass-card p-6 rounded-[2rem] border border-slate-200/50 dark:border-slate-800/40 space-y-6">
+                            <h3 class="font-extrabold text-slate-900 dark:text-white text-base">Evaluate Device Condition</h3>
+                            
+                            <!-- Scanner action switches -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <button onclick="simulateScan()" class="py-4 bg-slate-100 hover:bg-slate-200/60 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/50 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 rounded-2xl font-bold text-xs flex flex-col items-center justify-center space-y-2 transition-all">
+                                    <i class="fa-solid fa-qrcode text-primary-500 text-xl"></i>
+                                    <span>Simulate Scan</span>
+                                </button>
+                                <button onclick="triggerFileUpload()" class="py-4 bg-slate-100 hover:bg-slate-200/60 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/50 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 rounded-2xl font-bold text-xs flex flex-col items-center justify-center space-y-2 transition-all">
+                                    <i class="fa-solid fa-cloud-arrow-up text-accent text-xl"></i>
+                                    <span>Upload Image</span>
+                                </button>
+                                <input type="file" id="sell-fileInput" class="hidden" accept="image/*" onchange="handleImageUpload(event)" />
+                            </div>
+
+                            <!-- Defects Checklist -->
+                            <div class="space-y-4 pt-2">
+                                <h4 class="font-bold text-slate-900 dark:text-white text-xs">Wear Defect Checklist</h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                    <label class="flex items-center space-x-2.5 p-3 bg-white dark:bg-slate-900/60 rounded-xl border border-slate-200/50 dark:border-slate-800/80 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
+                                        <input type="checkbox" id="defect-scratch" class="rounded border-gray-300 dark:border-slate-800 text-primary-500 focus:ring-primary-500" onchange="recalculatePrice()">
+                                        <span class="text-slate-600 dark:text-slate-400">Screen Scratches (-$10)</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2.5 p-3 bg-white dark:bg-slate-900/60 rounded-xl border border-slate-200/50 dark:border-slate-800/80 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
+                                        <input type="checkbox" id="defect-dent" class="rounded border-gray-300 dark:border-slate-800 text-primary-500 focus:ring-primary-500" onchange="recalculatePrice()">
+                                        <span class="text-slate-600 dark:text-slate-400">Dented Frame (-$20)</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2.5 p-3 bg-white dark:bg-slate-900/60 rounded-xl border border-slate-200/50 dark:border-slate-800/80 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
+                                        <input type="checkbox" id="defect-battery" class="rounded border-gray-300 dark:border-slate-800 text-primary-500 focus:ring-primary-500" onchange="recalculatePrice()">
+                                        <span class="text-slate-600 dark:text-slate-400">Weak Battery (-$15)</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2.5 p-3 bg-white dark:bg-slate-900/60 rounded-xl border border-slate-200/50 dark:border-slate-800/80 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
+                                        <input type="checkbox" id="defect-camera" class="rounded border-gray-300 dark:border-slate-800 text-primary-500 focus:ring-primary-500" onchange="recalculatePrice()">
+                                        <span class="text-slate-600 dark:text-slate-400">Camera Fault (-$25)</span>
+                                    </label>
+                                </div>
+                                <div class="pt-2">
+                                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5" for="custom-defect">Other defects (Type here)</label>
+                                    <input class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input" id="custom-defect" placeholder="e.g. Broken back glass" type="text" oninput="recalculatePrice()"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Valuation Result Offer Card -->
+                        <div class="bg-gradient-to-r from-slate-900 to-slate-850 border border-slate-800/30 text-white rounded-[2rem] p-8 shadow-lg flex justify-between items-center">
+                            <div>
+                                <div class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Estimated Valuation Offer</div>
+                                <div class="text-3xl font-extrabold mt-1 text-primary-500" id="price-output">$0</div>
+                                <div class="text-xs text-slate-400 mt-1" id="bonus-points">+0 Eco Points reward</div>
+                            </div>
+                            <button onclick="confirmSale()" id="confirm-btn" disabled class="bg-primary-500 hover:bg-primary-600 text-white font-bold px-6 py-3 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed text-xs transition-all tracking-wide">
+                                Confirm Sale
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scanner Simulation View Right -->
+                    <div class="lg:col-span-5 flex flex-col items-center">
+                        <div class="w-full max-w-sm glass-card rounded-[2rem] border border-slate-200/50 dark:border-slate-800/40 p-5 flex flex-col items-center text-center space-y-4 shadow-xl">
+                            <span class="text-[10px] font-bold text-primary-500 uppercase tracking-widest bg-primary-100 dark:bg-primary-950/40 px-3 py-1 rounded-full">SaaS Inspection View</span>
+                            
+                            <div class="w-full aspect-square bg-slate-950 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden scan-container border border-slate-800">
+                                <div id="scan-bar" class="hidden scan-line"></div>
+                                <div class="absolute inset-4 border border-dashed border-white/10 rounded-xl pointer-events-none"></div>
+                                <div class="absolute top-6 left-6 w-4 h-4 border-t-2 border-l-2 border-primary-500 pointer-events-none"></div>
+                                <div class="absolute top-6 right-6 w-4 h-4 border-t-2 border-r-2 border-primary-500 pointer-events-none"></div>
+                                <div class="absolute bottom-6 left-6 w-4 h-4 border-b-2 border-l-2 border-primary-500 pointer-events-none"></div>
+                                <div class="absolute bottom-6 right-6 w-4 h-4 border-b-2 border-r-2 border-primary-500 pointer-events-none"></div>
+
+                                <!-- Dynamic Loading Skeleton overlay -->
+                                <div id="scan-skeleton" class="hidden absolute inset-0 bg-slate-900/90 dark:bg-slate-950/90 flex flex-col p-6 space-y-4 z-20">
+                                    <div class="skeleton w-3/4 h-5 rounded-lg"></div>
+                                    <div class="skeleton w-1/2 h-4 rounded-lg"></div>
+                                    <div class="flex-grow flex items-center justify-center">
+                                        <div class="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                    <p class="text-xs font-semibold text-slate-400 animate-pulse text-center">Inspecting device hardware matrices...</p>
+                                </div>
+
+                                <div id="scan-placeholder" class="text-slate-500 space-y-3 z-10 p-6 flex flex-col items-center">
+                                    <i class="fa-solid fa-camera text-4xl text-slate-700 animate-pulse"></i>
+                                    <p class="text-xs font-extrabold text-slate-400">Scanner Standby</p>
+                                    <p class="text-[10px] text-slate-500 leading-relaxed">Initiate scan or upload an image to identify hardware specifications.</p>
+                                </div>
+
+                                <img id="scan-img-preview" class="hidden absolute inset-0 w-full h-full object-cover z-0" src="" alt="Device preview"/>
+                            </div>
+
+                            <div class="w-full bg-slate-100/50 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 flex flex-col items-center justify-center space-y-1">
+                                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Identified hardware model</span>
+                                <span class="font-extrabold text-slate-800 dark:text-slate-200 text-xs" id="detected-device-name">None</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL 3: RECYCLE E-WASTE -->
+            <section id="tab-content-recycle" class="tab-panel hidden space-y-8 animate-fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <!-- Scheduling Form Left -->
+                    <div class="lg:col-span-5 space-y-6">
+                        <form onsubmit="handleRecycleSubmit(event)" class="glass-card p-6 rounded-[2rem] border border-slate-200/50 dark:border-slate-800/40 space-y-5">
+                            <h3 class="font-extrabold text-slate-900 dark:text-white text-base">Schedule Certified Recycling</h3>
+                            
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5" for="recycle-product">
+                                    Product to be Recycled
+                                </label>
+                                <input required class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input" id="recycle-product" placeholder="e.g. Broken screens, routers, CRT monitors" type="text"/>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                                    Pickup Mode
+                                </label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label onclick="togglePickup(true)" class="flex items-center justify-center space-x-2 p-3 bg-primary-50 dark:bg-primary-950/40 rounded-xl border-2 border-primary-500 cursor-pointer text-xs font-bold text-slate-800 dark:text-slate-200 transition-all shadow-sm" id="pickup-yes-lbl">
+                                        <input checked name="pickup" type="radio" class="sr-only" id="pickup-yes"/>
+                                        <i class="fa-solid fa-truck text-primary-500"></i>
+                                        <span>Home Pickup</span>
+                                    </label>
+                                    <label onclick="togglePickup(false)" class="flex items-center justify-center space-x-2 p-3 bg-white dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800/60 cursor-pointer text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all" id="pickup-no-lbl">
+                                        <input name="pickup" type="radio" class="sr-only" id="pickup-no"/>
+                                        <i class="fa-solid fa-store text-slate-400"></i>
+                                        <span>Self Drop-off</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div id="location-field-group">
+                                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5" for="recycle-location-input">
+                                    Address Coordinates
+                                </label>
+                                <input readonly required class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/40 rounded-xl text-xs text-slate-500 dark:text-slate-400 focus:outline-none" id="recycle-location-input" placeholder="Click coordinates on the map tracker" type="text"/>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 pt-2">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold mb-1">Total Distance</span>
+                                    <input readonly class="w-full bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/40 rounded-xl px-3 py-2 text-xs text-slate-600 dark:text-slate-400 font-bold" id="total-kilometers" value="0.00 km" type="text"/>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold mb-1">Pickup Charge</span>
+                                    <input readonly class="w-full bg-slate-100 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/40 rounded-xl px-3 py-2 text-xs text-slate-600 dark:text-slate-400 font-bold text-emerald-500" id="pickup-charge" value="0 Rupees" type="text"/>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full py-3.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg transition-colors uppercase tracking-wider text-xs">
+                                Book Pickup request
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Map Container Right -->
+                    <div class="lg:col-span-7">
+                        <div class="glass-card rounded-[2rem] overflow-hidden shadow-lg border border-slate-200/50 dark:border-slate-800/40 p-4 space-y-3">
+                            <div class="flex justify-between items-center px-1">
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                    <span class="text-xs font-semibold text-slate-900 dark:text-white">Pin coordinates on map</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400">HQ center point: Delhi</span>
+                            </div>
+                            <div id="recycle-map" class="shadow-inner border border-slate-200 dark:border-slate-800"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL 4: DONATE TECH -->
+            <section id="tab-content-donate" class="tab-panel hidden space-y-8 animate-fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    <!-- Form Columns Left -->
+                    <div class="lg:col-span-7 space-y-6">
+                        <form onsubmit="handleDonateSubmit(event)" class="glass-card p-6 rounded-[2rem] border border-slate-200/50 dark:border-slate-800/40 space-y-4">
+                            <h3 class="font-extrabold text-slate-900 dark:text-white text-base">Donate Circular Technology</h3>
+                            
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5" for="donate-product-details">
+                                    Device Name & Specifications
+                                </label>
+                                <input required class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input" id="donate-product-details" placeholder="e.g. iPad Gen 6, 32GB (functional screen)" type="text"/>
+                            </div>
+
+                            <!-- Photo Upload Dropzone with visual drag-and-drop animations -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                                    Upload Device Image
+                                </label>
+                                <div id="donate-drop-zone" class="flex flex-col w-full h-32 border-2 border-dashed border-slate-200 dark:border-slate-800 hover:bg-primary-50/10 hover:border-primary-500 rounded-2xl cursor-pointer group transition-all items-center justify-center relative overflow-hidden">
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6 text-center space-y-1" id="donate-upload-placeholder">
+                                        <i class="fa-solid fa-cloud-arrow-up text-xl text-slate-400 group-hover:text-primary-500 transition-colors"></i>
+                                        <p class="text-xs text-slate-500"><span class="font-bold text-primary-500 group-hover:underline">Click to upload</span> or drag image here</p>
+                                        <p class="text-[9px] text-slate-400">PNG, JPG, WEBP up to 5MB</p>
+                                    </div>
+                                    <img id="donate-image-preview" class="hidden absolute inset-0 w-full h-full object-cover" src="#" alt="Upload preview"/>
+                                    <input required class="hidden" type="file" id="donate-file-input" accept="image/*" onchange="previewDonateImage(event)"/>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-slate-200/50 dark:border-slate-800/40 pt-3 space-y-3">
+                                <h4 class="font-bold text-slate-800 dark:text-white text-xs">Pickup Coordinates</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <input required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input" id="donate-name" placeholder="Contact Name" value="Salahuddin" type="text"/>
+                                    </div>
+                                    <div>
+                                        <input required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input" id="donate-phone" placeholder="Phone Number" type="tel"/>
+                                    </div>
+                                </div>
+                                <div>
+                                    <input required class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input" id="donate-address" placeholder="Complete Street Address" type="text"/>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full py-3.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg transition-colors uppercase tracking-wider text-xs">
+                                Register Donation
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Social Impact lists Right -->
+                    <div class="lg:col-span-5 space-y-6">
+                        <div class="relative w-full max-w-sm mx-auto select-none">
+                            <div class="absolute -inset-1 rounded-[2rem] bg-gradient-to-tr from-accent to-purple-500 opacity-20 blur-xl"></div>
+                            <img alt="Electronics donation illustration" class="relative w-full h-auto rounded-3xl object-cover shadow-lg border border-white/20 dark:border-slate-800/50" src="https://storage.googleapis.com/a1aa/image/IL6gj08_PFE3RGNJRV_MRreCYZdug2y9asEIJLLOnMM.jpg"/>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div class="glass-card p-4 rounded-2xl flex items-start space-x-3 border border-slate-200/50 dark:border-slate-800/40">
+                                <span class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 flex items-center justify-center shrink-0"><i class="fa-solid fa-graduation-cap"></i></span>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 dark:text-white text-xs">Bridges Digital Divide</h4>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">Your functional tablet or laptop allows students from poor families to access online coursework.</p>
+                                </div>
+                            </div>
+                            <div class="glass-card p-4 rounded-2xl flex items-start space-x-3 border border-slate-200/50 dark:border-slate-800/40">
+                                <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500 flex items-center justify-center shrink-0"><i class="fa-solid fa-circle-nodes"></i></span>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 dark:text-white text-xs">Promotes Reuse Loop</h4>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">Reusing is 20x more carbon-efficient than dismantling and recycling components.</p>
+                                </div>
+                            </div>
+                            <div class="glass-card p-4 rounded-2xl flex items-start space-x-3 border border-slate-200/50 dark:border-slate-800/40">
+                                <span class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center shrink-0"><i class="fa-solid fa-gift"></i></span>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 dark:text-white text-xs">+150 Eco Points</h4>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed">Get a direct flat 150 points bonus credited to your account as an eco-donation reward.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL 5: FIND BINS -->
+            <section id="tab-content-locations" class="tab-panel hidden space-y-8 animate-fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <!-- Locations Card list Left -->
+                    <div class="lg:col-span-5 space-y-4 flex flex-col h-[560px]">
+                        <div class="space-y-4 shrink-0 bg-white/20 dark:bg-slate-900/30 p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 shadow-sm">
+                            <h3 class="font-bold text-slate-900 dark:text-white text-sm">Disposal Drop-off Containers</h3>
+                            <button onclick="findNearestSites()" class="w-full py-3 bg-slate-900 hover:bg-slate-800 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-bold rounded-xl text-xs transition-colors flex items-center justify-center space-x-2 shadow-md uppercase tracking-wider">
+                                <i class="fa-solid fa-location-crosshairs animate-pulse"></i>
+                                <span>Find Bins Near Me</span>
+                            </button>
+                        </div>
+
+                        <!-- Scrollable list of sites -->
+                        <div class="flex-grow overflow-y-auto space-y-4 pr-1" id="list-container">
+                            <!-- Loading skeleton for OSM queries list -->
+                            <div id="osm-list-loading" class="hidden space-y-3">
+                                <div class="skeleton h-16 w-full rounded-2xl"></div>
+                                <div class="skeleton h-16 w-full rounded-2xl"></div>
+                                <div class="skeleton h-16 w-full rounded-2xl"></div>
+                            </div>
+
+                            <div class="text-center py-8 text-slate-400 bg-white/50 dark:bg-slate-900/20 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl" id="list-empty-state">
+                                <i class="fa-solid fa-map-pin text-3xl mb-2 text-primary-500/40"></i>
+                                <p class="text-xs font-semibold">Predefined hubs are shown on map.</p>
+                                <p class="text-[10px] text-slate-400 mt-1">Click "Find Bins Near Me" to search near your actual browser GPS location.</p>
+                            </div>
+                            <ul id="disposalSites" class="space-y-3"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Map Right -->
+                    <div class="lg:col-span-7">
+                        <div class="glass-card rounded-[2rem] overflow-hidden shadow-lg border border-slate-200/50 dark:border-slate-800/40 p-4 space-y-3">
+                            <div class="flex justify-between items-center px-1">
+                                <div class="flex items-center space-x-2 text-xs font-semibold text-slate-900 dark:text-white">
+                                    <i class="fa-solid fa-earth-americas text-primary-500"></i>
+                                    <span>Interactive Collection Map Tracker</span>
+                                </div>
+                            </div>
+                            <div id="locations-map" class="shadow-inner border border-slate-200 dark:border-slate-800"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL 6: REWARDS HUB -->
+            <section id="tab-content-rewards" class="tab-panel hidden space-y-8 animate-fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <!-- Progress Card Left -->
+                    <div class="lg:col-span-5 space-y-6 text-center">
+                        <div class="glass-card p-8 rounded-[2rem] border border-slate-200/50 dark:border-slate-800/40 space-y-6 flex flex-col items-center shadow-lg relative overflow-hidden">
+                            <div class="absolute top-4 right-4 bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 border border-primary-200/30 px-3 py-1 rounded-full text-[10px] font-bold">
+                                Silver Tier
+                            </div>
+                            
+                            <!-- Circular progress ring -->
+                            <div class="relative w-44 h-44 flex items-center justify-center select-none">
+                                <svg class="w-full h-full transform -rotate-90">
+                                    <circle cx="88" cy="88" r="76" stroke="#e2e8f0" class="dark:stroke-slate-800" stroke-width="12" fill="transparent"/>
+                                    <circle cx="88" cy="88" r="76" stroke="#16a34a" stroke-width="12" fill="transparent"
+                                            stroke-dasharray="477.5" stroke-dashoffset="238.7" id="progress-circle" class="transition-all duration-1000 ease-out"/>
+                                </svg>
+                                <div class="absolute text-center space-y-0.5">
+                                    <span class="text-3xl font-black text-slate-900 dark:text-white points-display" id="circle-points">500</span>
+                                    <span class="block text-[9px] text-slate-400 font-bold uppercase tracking-wider">Points</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1">
+                                <h3 class="font-extrabold text-slate-800 dark:text-white text-sm" id="progress-heading">500 Points to Gold Tier</h3>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">Complete more recycling pick-ups or sell gadgets to hit Gold and unlock premium discounts.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Voucher Cards Right -->
+                    <div class="lg:col-span-7 space-y-6">
+                        <div class="space-y-4">
+                            <h3 class="text-sm uppercase font-black tracking-widest text-slate-400 dark:text-slate-500 flex items-center">
+                                <i class="fa-solid fa-gift text-primary-500 mr-2 text-xs"></i> Redeemable Vouchers
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="bg-white dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 shadow-sm flex flex-col justify-between space-y-4">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h4 class="font-bold text-slate-800 dark:text-white text-xs">Amazon Gift Card</h4>
+                                            <p class="text-xs text-emerald-500 font-bold mt-0.5">₹100 Cashback</p>
+                                        </div>
+                                        <span class="text-[10px] font-semibold bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400 border border-primary-200/30 px-2.5 py-1 rounded-full shrink-0">200 Pts</span>
+                                    </div>
+                                    <button onclick="claimVoucher('Amazon Gift Card', 200)" class="w-full py-2 bg-slate-900 hover:bg-slate-800 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm">
+                                        Claim Voucher
+                                    </button>
+                                </div>
+
+                                <div class="bg-white dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 shadow-sm flex flex-col justify-between space-y-4">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h4 class="font-bold text-slate-800 dark:text-white text-xs">Zomato Food Coupon</h4>
+                                            <p class="text-xs text-emerald-500 font-bold mt-0.5">₹50 off</p>
+                                        </div>
+                                        <span class="text-[10px] font-semibold bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400 border border-primary-200/30 px-2.5 py-1 rounded-full shrink-0">100 Pts</span>
+                                    </div>
+                                    <button onclick="claimVoucher('Zomato Food Coupon', 100)" class="w-full py-2 bg-slate-900 hover:bg-slate-800 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm">
+                                        Claim Voucher
+                                    </button>
+                                </div>
+
+                                <div class="bg-white dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 shadow-sm flex flex-col justify-between space-y-4">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h4 class="font-bold text-slate-800 dark:text-white text-xs">Uber Ride Discount</h4>
+                                            <p class="text-xs text-emerald-500 font-bold mt-0.5">₹75 off</p>
+                                        </div>
+                                        <span class="text-[10px] font-semibold bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400 border border-primary-200/30 px-2.5 py-1 rounded-full shrink-0">150 Pts</span>
+                                    </div>
+                                    <button onclick="claimVoucher('Uber Ride Discount', 150)" class="w-full py-2 bg-slate-900 hover:bg-slate-800 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm">
+                                        Claim Voucher
+                                    </button>
+                                </div>
+
+                                <div class="bg-white dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 shadow-sm flex flex-col justify-between space-y-4">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h4 class="font-bold text-slate-800 dark:text-white text-xs">Tree Plantation Card</h4>
+                                            <p class="text-xs text-emerald-500 font-bold mt-0.5">Plant 1 Tree</p>
+                                        </div>
+                                        <span class="text-[10px] font-semibold bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400 border border-primary-200/30 px-2.5 py-1 rounded-full shrink-0">100 Pts</span>
+                                    </div>
+                                    <button onclick="claimVoucher('Tree Plantation Card', 100)" class="w-full py-2 bg-slate-900 hover:bg-slate-800 dark:bg-primary-500 dark:hover:bg-primary-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm">
+                                        Plant Tree
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Redeem history card -->
+                        <div class="glass-card p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 space-y-4">
+                            <h3 class="font-bold text-slate-800 dark:text-white text-xs flex items-center">
+                                <i class="fa-solid fa-clock-rotate-left text-primary-500 mr-2"></i> Redemption History
+                            </h3>
+                            <ul id="redemption-history-list" class="divide-y divide-slate-100 dark:divide-slate-800/60 text-[10px]">
+                                <li class="py-3 flex justify-between items-center">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="w-2 h-2 rounded-full bg-primary-500"></span>
+                                        <span class="font-semibold text-slate-700 dark:text-slate-300">₹50 Cashback (Amazon Card)</span>
+                                    </div>
+                                    <span class="text-slate-400 font-medium">Redeemed on 10th Feb</span>
+                                </li>
+                                <li class="py-3 flex justify-between items-center">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="w-2 h-2 rounded-full bg-primary-500"></span>
+                                        <span class="font-semibold text-slate-700 dark:text-slate-300">E-Waste Awareness Badge</span>
+                                    </div>
+                                    <span class="text-slate-400 font-medium">Unlocked on 5th Feb</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Interactive Mobile Navigation Bottom-Bar -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900 dark:bg-slate-950 text-slate-400 flex justify-around items-center border-t border-slate-800 py-3 px-4 select-none">
+        <button onclick="switchTab('dashboard')" id="mobile-nav-dashboard" class="flex flex-col items-center text-white">
+            <i class="fa-solid fa-chart-pie text-base"></i>
+            <span class="text-[9px] mt-1 font-bold">Home</span>
+        </button>
+        <button onclick="switchTab('sell')" id="mobile-nav-sell" class="flex flex-col items-center">
+            <i class="fa-solid fa-hand-holding-dollar text-base"></i>
+            <span class="text-[9px] mt-1">Sell</span>
+        </button>
+        <button onclick="switchTab('recycle')" id="mobile-nav-recycle" class="flex flex-col items-center">
+            <i class="fa-solid fa-recycle text-base"></i>
+            <span class="text-[9px] mt-1">Recycle</span>
+        </button>
+        <button onclick="switchTab('donate')" id="mobile-nav-donate" class="flex flex-col items-center">
+            <i class="fa-solid fa-hands-holding-child text-base"></i>
+            <span class="text-[9px] mt-1">Donate</span>
+        </button>
+        <button onclick="switchTab('locations')" id="mobile-nav-locations" class="flex flex-col items-center">
+            <i class="fa-solid fa-map-location-dot text-base"></i>
+            <span class="text-[9px] mt-1">Bins</span>
+        </button>
+        <button onclick="switchTab('rewards')" id="mobile-nav-rewards" class="flex flex-col items-center">
+            <i class="fa-solid fa-gift text-base"></i>
+            <span class="text-[9px] mt-1">Rewards</span>
+        </button>
+    </nav>
+
+    <!-- GLOBAL DYNAMIC MODALS -->
+    <!-- Success Modal -->
+    <div id="global-success-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-md w-full text-center space-y-6 shadow-2xl animate-fade-in border border-slate-200/50 dark:border-slate-800/80">
+            <div class="w-20 h-20 rounded-full bg-primary-50 dark:bg-primary-950/40 text-primary-500 mx-auto flex items-center justify-center text-4xl shadow-inner" id="modal-icon-container">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white" id="modal-title">Success!</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400" id="modal-desc">Action was completed successfully.</p>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-4" id="modal-details-grid">
+                <div>
+                    <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-bold" id="modal-grid-lbl1">Item</span>
+                    <span class="text-sm font-extrabold text-slate-800 dark:text-slate-200" id="modal-grid-val1">Value</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-bold" id="modal-grid-lbl2">Eco Points</span>
+                    <span class="text-sm font-extrabold text-primary-500" id="modal-grid-val2">+0 pts</span>
+                </div>
+            </div>
+            <button onclick="closeSuccessModal()" class="w-full py-3.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg transition-colors text-xs uppercase tracking-wider">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <!-- Voucher Success Modal -->
+    <div id="voucher-success-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-md w-full text-center space-y-6 shadow-2xl animate-fade-in border border-slate-200/50 dark:border-slate-800/80">
+            <div class="w-20 h-20 rounded-full bg-primary-50 dark:bg-primary-950/40 text-primary-500 mx-auto flex items-center justify-center text-4xl shadow-inner">
+                <i class="fa-solid fa-ticket"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">Voucher Claimed!</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400" id="voucher-modal-desc">Your voucher code has been generated. Check email for details.</p>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 text-center">
+                <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Your Voucher Code</span>
+                <span class="text-lg font-mono font-black text-slate-900 dark:text-white tracking-widest" id="voucher-modal-code">EV-XXXX-XXXX</span>
+            </div>
+            <button onclick="closeVoucherModal()" class="w-full py-3.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg transition-colors text-xs uppercase tracking-wider">
+                Awesome
+            </button>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- Consolidated Application Logic Script -->
+    <script>
+        // Check authentication state
+        let token = null;
+        const initializeFirebase = async () => {
+            const response = await fetch('http://localhost:5000/api/config/firebase');
+            const result = await response.json();
+            if (!result.success) throw new Error(result.message);
+            if (!firebase.apps.length) firebase.initializeApp(result.data);
+            return firebase.auth();
+        };
+
+        // GLOBALS
+        let ecoPoints = 500;
+        let username = "Salahuddin";
+        let rewardsByName = {};
+
+        // Tab Navigation
+        const tabs = ['dashboard', 'sell', 'recycle', 'donate', 'locations', 'rewards'];
+        const tabTitles = {
+            'dashboard': 'Console Overview',
+            'sell': 'Inspect retired hardware',
+            'recycle': 'E-waste certified recycling',
+            'donate': 'Technology circular loop donation',
+            'locations': 'Dropbox Collection hubs tracker',
+            'rewards': 'Redemption reward centers'
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Theme settings loads
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.documentElement.classList.add("dark");
+            } else {
+                document.documentElement.classList.remove("dark");
+            }
+
+            initializeFirebase().then(auth => auth.onAuthStateChanged(async user => {
+                if (!user) return window.location.href = 'index.html';
+                token = await user.getIdToken();
+                await loadDashboardData();
+            })).catch(error => {
+                console.error('Firebase initialization failed:', error);
+                window.location.href = 'index.html';
+            });
+
+            // Initialize Leaflet maps
+            initRecycleMap();
+            initLocationsMap();
+
+            // Initialize Drag & Drop features for Donation File Input
+            initDonationDragDrop();
+        });
+
+        // Load dashboard live statistics from backend
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('http://localhost:5000/api/user/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    const data = result.data;
+                    ecoPoints = data.profile.ecoPoints;
+                    username = data.profile.fullName;
+
+                    // Sync names and points indicators
+                    updatePointsUI();
+                    updateUsernameUI();
+
+                    // Update metrics counters in dashboard home
+                    document.getElementById("circle-points").textContent = ecoPoints;
+                    
+                    // Render transaction ledgers into redemption list
+                    renderTransactionsList(data.transactionHistory);
+                    await loadRewards();
+                } else {
+                    console.error("Profile load rejected:", result.message);
+                }
+            } catch (err) {
+                console.error("Connection error loading dashboard statistics:", err);
+            }
+        }
+
+        async function loadRewards() {
+            const response = await fetch('http://localhost:5000/api/rewards', { headers: { 'Authorization': `Bearer ${token}` } });
+            const result = await response.json();
+            if (result.success) rewardsByName = Object.fromEntries(result.data.map(reward => [reward.name, reward]));
+        }
+
+        // Toggle Theme (Light/Dark Mode)
+        function toggleTheme() {
+            if (document.documentElement.classList.contains("dark")) {
+                document.documentElement.classList.remove("dark");
+            } else {
+                document.documentElement.classList.add("dark");
+            }
+        }
+
+        // Collapse Sidebar Controls
+        let sidebarCollapsed = false;
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            const chevron = document.getElementById("collapse-chevron");
+            const logo = document.getElementById("sidebar-logo");
+
+            sidebarCollapsed = !sidebarCollapsed;
+            if (sidebarCollapsed) {
+                sidebar.classList.remove("w-64");
+                sidebar.classList.add("w-20", "px-3");
+                chevron.classList.add("rotate-180");
+                logo.classList.add("hidden");
+                // Hide sidebar link text labels
+                document.querySelectorAll(".sidebar-text").forEach(txt => txt.classList.add("hidden"));
+            } else {
+                sidebar.classList.remove("w-20", "px-3");
+                sidebar.classList.add("w-64");
+                chevron.classList.remove("rotate-180");
+                logo.classList.remove("hidden");
+                // Show sidebar link text labels
+                document.querySelectorAll(".sidebar-text").forEach(txt => txt.classList.remove("hidden"));
+            }
+        }
+
+        // Toggle Mobile Navigation Side drawer
+        function toggleMobileSidebar() {
+            const mSidebar = document.getElementById("mobile-sidebar");
+            const overlay = document.getElementById("mobile-overlay");
+            if (mSidebar.classList.contains("-translate-x-full")) {
+                mSidebar.classList.remove("-translate-x-full");
+                overlay.classList.remove("hidden");
+            } else {
+                mSidebar.classList.add("-translate-x-full");
+                overlay.classList.add("hidden");
+            }
+        }
+
+        // Log out clearing action
+        async function handleLogout() {
+            try {
+                await fetch('http://localhost:5000/api/auth/logout', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            } catch (e) {
+                console.warn("Logout endpoint communication error:", e.message);
+            }
+            if (firebase.apps.length) await firebase.auth().signOut();
+            window.location.href = "index.html";
+        }
+
+        function updatePointsUI() {
+            const pointEls = document.querySelectorAll(".points-display");
+            pointEls.forEach(el => el.textContent = ecoPoints);
+
+            const headerPointEls = document.querySelectorAll(".header-points-display");
+            headerPointEls.forEach(el => el.textContent = ecoPoints);
+
+            // Update rewards progress ring SVG offsets
+            const circle = document.getElementById("progress-circle");
+            if (circle) {
+                const maxPoints = 1000;
+                const percentage = Math.min(ecoPoints / maxPoints, 1);
+                const radius = 76;
+                const circumference = 2 * Math.PI * radius; // ~477.5
+                const offset = circumference - (percentage * circumference);
+                circle.style.strokeDashoffset = offset;
+
+                // Update text text heading below progress
+                const progressHeading = document.getElementById("progress-heading");
+                if (ecoPoints >= 1000) {
+                    progressHeading.textContent = "Gold Recycler Level Reached! 🌟";
+                } else {
+                    progressHeading.textContent = `${1000 - ecoPoints} Points to Gold Tier`;
+                }
+            }
+        }
+
+        function updateUsernameUI() {
+            const nameEls = document.querySelectorAll(".welcome-user-name");
+            nameEls.forEach(el => el.textContent = username);
+
+            const headerName = document.getElementById("header-username");
+            if (headerName) headerName.textContent = username;
+
+            const profileName = document.getElementById("profile-name");
+            if (profileName) profileName.textContent = username;
+        }
+
+        function switchTab(targetTab) {
+            // Hide all tab panels
+            document.querySelectorAll(".tab-panel").forEach(panel => {
+                panel.classList.add("hidden");
+            });
+
+            // Show target panel
+            const targetPanel = document.getElementById(`tab-content-${targetTab}`);
+            if (targetPanel) {
+                targetPanel.classList.remove("hidden");
+            }
+
+            // Update Header Title
+            const titleEl = document.getElementById("current-tab-title");
+            if (titleEl) {
+                titleEl.textContent = tabTitles[targetTab] || "Portal Console";
+            }
+
+            // Update Desktop Sidebar Buttons State
+            tabs.forEach(tab => {
+                const sidebarBtn = document.getElementById(`sidebar-${tab}`);
+                if (sidebarBtn) {
+                    if (tab === targetTab) {
+                        sidebarBtn.className = "w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-bold bg-primary-500 text-white transition-all shadow-lg shadow-primary-500/15";
+                    } else {
+                        sidebarBtn.className = "w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800 hover:text-white transition-all";
+                    }
+                }
+
+                // Update Mobile Navigation bottom menu bar buttons state
+                const mobileBtn = document.getElementById(`mobile-nav-${tab}`);
+                const mSidebarLink = document.getElementById(`mobile-nav-link-${tab}`);
+                
+                if (mobileBtn) {
+                    if (tab === targetTab) {
+                        mobileBtn.className = "flex flex-col items-center text-white";
+                    } else {
+                        mobileBtn.className = "flex flex-col items-center";
+                    }
+                }
+                if (mSidebarLink) {
+                    if (tab === targetTab) {
+                        mSidebarLink.className = "w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold bg-slate-800 text-white transition-all";
+                    } else {
+                        mSidebarLink.className = "w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800 hover:text-white transition-all";
+                    }
+                }
+            });
+
+            // Leaflet Map Invalidation Fixes (recalculates maps width and offsets properly when shown)
+            if (targetTab === 'recycle' && recycleMap) {
+                setTimeout(() => {
+                    recycleMap.invalidateSize();
+                }, 100);
+            }
+            if (targetTab === 'locations' && locationsMap) {
+                setTimeout(() => {
+                    locationsMap.invalidateSize();
+                }, 100);
+            }
+        }
+
+        // ==========================================
+        // 1. CHATBOT SIMULATION LOGIC
+        // ==========================================
+        function appendChatMessage(sender, text) {
+            const chatHistory = document.getElementById("chat-history");
+            const messageRow = document.createElement("div");
+            messageRow.className = "flex items-start space-x-2.5 animate-fade-in";
+
+            if (sender === "user") {
+                messageRow.innerHTML = `
+                    <div class="flex-grow"></div>
+                    <div class="bg-primary-500 text-white p-3 rounded-2xl rounded-tr-none text-slate-700 max-w-[85%] shadow-sm leading-relaxed">
+                        ${text}
+                    </div>
+                    <div class="w-6 h-6 rounded-lg bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300 flex items-center justify-center font-bold text-[10px] mt-0.5 shrink-0">
+                        ${username[0].toUpperCase()}
+                    </div>
+                `;
+            } else {
+                messageRow.innerHTML = `
+                    <div class="w-6 h-6 rounded-lg bg-slate-900 text-white flex items-center justify-center text-[10px] mt-0.5 shrink-0">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800/80 p-3 rounded-2xl rounded-tl-none border border-slate-200/50 dark:border-slate-850 text-slate-700 dark:text-slate-300 max-w-[85%] shadow-xs leading-relaxed">
+                        ${text}
+                    </div>
+                `;
+            }
+            
+            chatHistory.appendChild(messageRow);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function handleChatSubmit(event) {
+            event.preventDefault();
+            const chatInput = document.getElementById("chat-input");
+            const query = chatInput.value.trim();
+            if (!query) return;
+
+            appendChatMessage("user", query);
+            chatInput.value = "";
+
+            let botReply = "Great question! eRevive supports selling, recycling, or donating e-waste. Try selecting the relevant option on this dashboard or ask me details about points or safety.";
+            const lowerQuery = query.toLowerCase();
+            
+            if (lowerQuery.includes("point") || lowerQuery.includes("reward") || lowerQuery.includes("earn")) {
+                botReply = "You earn <b>Eco Points</b> for every transaction! Selling gives points + cash estimate, donating gives a fixed bonus, and recycling gives points relative to item weight. Redeem points on the <b>Rewards</b> tab for cashback and brand vouchers!";
+            } else if (lowerQuery.includes("recycle") || lowerQuery.includes("pick")) {
+                botReply = "To recycle, choose the <b>Recycle E-Waste</b> tab. Select yes/no for pickup, pin your location on the OpenStreetMap tracker, see the distance and fee, and confirm! Points are added after verification.";
+            } else if (lowerQuery.includes("sell") || lowerQuery.includes("price") || lowerQuery.includes("estimate")) {
+                botReply = "Go to the <b>Sell Tech</b> tab to evaluate your electronics! You can simulate a camera scan, specify any physical defects (like screen scratches or battery wear), and get an instant cash offer.";
+            } else if (lowerQuery.includes("hazardous") || lowerQuery.includes("safe") || lowerQuery.includes("danger")) {
+                botReply = "Many electronics contain heavy metals like lead, cadmium, and mercury. By recycling with us, we extract valuable copper/gold and neutralize hazards safely without landfill dumping.";
+            } else if (lowerQuery.includes("location") || lowerQuery.includes("bin") || lowerQuery.includes("map")) {
+                botReply = "Open the <b>Find Bins</b> tab! It uses your browser GPS to locate the closest eRevive eco-containers in your city, showing active drop-off slots and maps.";
+            }
+
+            setTimeout(() => {
+                appendChatMessage("bot", botReply);
+            }, 550);
+        }
+
+        // ==========================================
+        // 2. SELL MODULE LOGIC
+        // ==========================================
+        let sellBasePrice = 0;
+        let sellFinalPrice = 0;
+        let sellDeviceName = "";
+
+        const mockDevices = [
+            { name: "iPhone 13 Pro (128GB)", price: 350 },
+            { name: "Samsung Galaxy S22 (256GB)", price: 280 },
+            { name: "iPad Air 4th Gen (WiFi)", price: 210 },
+            { name: "Lenovo ThinkPad T490 Core i5", price: 180 },
+            { name: "HP Pavilion 15 Core i7", price: 240 }
+        ];
+
+        function triggerFileUpload() {
+            document.getElementById('sell-fileInput').click();
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgPreview = document.getElementById("scan-img-preview");
+                imgPreview.src = e.target.result;
+                imgPreview.classList.remove("hidden");
+                document.getElementById("scan-placeholder").classList.add("hidden");
+                runScanSweepAnimation();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function simulateScan() {
+            const imgPreview = document.getElementById("scan-img-preview");
+            imgPreview.src = "WhatsApp Image 2025-02-27 at 21.25.54_d5959db5.jpg";
+            imgPreview.classList.remove("hidden");
+            document.getElementById("scan-placeholder").classList.add("hidden");
+            runScanSweepAnimation();
+        }
+
+        function runScanSweepAnimation() {
+            const scanBar = document.getElementById("scan-bar");
+            const loading = document.getElementById("scan-skeleton"); // Shows skeleton
+            const deviceField = document.getElementById("detected-device-name");
+            const confirmBtn = document.getElementById("confirm-btn");
+
+            scanBar.classList.remove("hidden");
+            loading.classList.remove("hidden"); // Enable loading skeleton
+            confirmBtn.disabled = true;
+
+            setTimeout(() => {
+                scanBar.classList.add("hidden");
+                loading.classList.add("hidden"); // Disable skeleton
+                
+                const device = mockDevices[Math.floor(Math.random() * mockDevices.length)];
+                sellDeviceName = device.name;
+                sellBasePrice = device.price;
+
+                deviceField.textContent = sellDeviceName;
+                deviceField.className = "font-bold text-emerald-500 dark:text-emerald-400 text-xs";
+                
+                recalculatePrice();
+            }, 2000);
+        }
+
+        function recalculatePrice() {
+            if (!sellBasePrice) return;
+
+            let price = sellBasePrice;
+            if (document.getElementById("defect-scratch").checked) price -= 10;
+            if (document.getElementById("defect-dent").checked) price -= 20;
+            if (document.getElementById("defect-battery").checked) price -= 15;
+            if (document.getElementById("defect-camera").checked) price -= 25;
+
+            const customDefect = document.getElementById("custom-defect").value.trim().toLowerCase();
+            if (customDefect.length > 0) {
+                price -= 30;
+            }
+
+            if (price < 10) price = 10;
+            sellFinalPrice = price;
+
+            // Animate price numbers
+            animatePrice(price);
+
+            document.getElementById("confirm-btn").disabled = false;
+        }
+
+        function animatePrice(target) {
+            const priceOut = document.getElementById("price-output");
+            const bonusOut = document.getElementById("bonus-points");
+            let start = 0;
+            const duration = 800;
+            const stepTime = 20;
+            const steps = duration / stepTime;
+            const increment = target / steps;
+
+            const timer = setInterval(() => {
+                start += increment;
+                if (start >= target) {
+                    clearInterval(timer);
+                    priceOut.textContent = `$${Math.round(target)}`;
+                    bonusOut.textContent = `+${Math.round(target / 2)} Eco Points reward`;
+                } else {
+                    priceOut.textContent = `$${Math.round(start)}`;
+                    bonusOut.textContent = `+${Math.round(start / 2)} Eco Points reward`;
+                }
+            }, stepTime);
+        }
+
+        // POST valuation to backend
+        async function confirmSale() {
+            if (sellFinalPrice <= 0) return;
+            
+            const defects = [];
+            if (document.getElementById("defect-scratch").checked) defects.push("Scratch");
+            if (document.getElementById("defect-dent").checked) defects.push("Dent");
+            if (document.getElementById("defect-battery").checked) defects.push("Battery");
+            if (document.getElementById("defect-camera").checked) defects.push("Camera");
+            const customDefects = document.getElementById("custom-defect").value.trim();
+
+            try {
+                const response = await fetch('http://localhost:5000/api/sell/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        deviceName: sellDeviceName,
+                        defects,
+                        customDefects
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    // Update points and widgets
+                    await loadDashboardData();
+
+                    // Set up success modal details
+                    document.getElementById("modal-icon-container").innerHTML = '<i class="fa-solid fa-check"></i>';
+                    document.getElementById("modal-title").textContent = "Sale Confirmed!";
+                    document.getElementById("modal-desc").textContent = `Your device evaluation has been locked. Our collection agent will pick up the item in 24 hours.`;
+                    document.getElementById("modal-grid-lbl1").textContent = "Estimated Cashback";
+                    document.getElementById("modal-grid-val1").textContent = `$${sellFinalPrice}`;
+                    document.getElementById("modal-grid-lbl2").textContent = "Eco Points Gained";
+                    document.getElementById("modal-grid-val2").textContent = `+${result.pointsGained} pts`;
+
+                    resetSellTab();
+                    document.getElementById("global-success-modal").classList.remove("hidden");
+                } else {
+                    alert("Confirmation failed: " + result.message);
+                }
+            } catch (err) {
+                console.error("Sale request dispatch error:", err);
+            }
+        }
+
+        function resetSellTab() {
+            sellBasePrice = 0;
+            sellFinalPrice = 0;
+            sellDeviceName = "";
+            document.getElementById("detected-device-name").textContent = "None";
+            document.getElementById("detected-device-name").className = "font-bold text-slate-800 dark:text-slate-200 text-xs";
+            document.getElementById("scan-img-preview").classList.add("hidden");
+            document.getElementById("scan-img-preview").src = "";
+            document.getElementById("scan-placeholder").classList.remove("hidden");
+            document.getElementById("defect-scratch").checked = false;
+            document.getElementById("defect-dent").checked = false;
+            document.getElementById("defect-battery").checked = false;
+            document.getElementById("defect-camera").checked = false;
+            document.getElementById("custom-defect").value = "";
+            document.getElementById("price-output").textContent = "$0";
+            document.getElementById("bonus-points").textContent = "+0 Eco Points reward";
+            document.getElementById("confirm-btn").disabled = true;
+        }
+
+        // ==========================================
+        // 3. RECYCLE MODULE LOGIC
+        // ==========================================
+        let recycleMap;
+        let recycleMarker;
+        const recycleHQ = { lat: 28.7041, lng: 77.1025 };
+        let isPickupNeeded = true;
+
+        function initRecycleMap() {
+            recycleMap = L.map('recycle-map').setView([28.7041, 77.1025], 11);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(recycleMap);
+
+            // HQ Marker
+            L.marker([28.7041, 77.1025], {
+                icon: L.divIcon({
+                    html: '<div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center border-2 border-white shadow-md"><i class="fa-solid fa-building text-xs"></i></div>',
+                    className: '',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                })
+            }).addTo(recycleMap).bindPopup("eRevive Delhi HQ");
+
+            recycleMap.on('click', function(e) {
+                if (isPickupNeeded) {
+                    placeRecycleMarker(e.latlng);
+                }
+            });
+        }
+
+        function placeRecycleMarker(latLng) {
+            if (recycleMarker) {
+                recycleMap.removeLayer(recycleMarker);
+            }
+
+            recycleMarker = L.marker([latLng.lat, latLng.lng], {
+                icon: L.divIcon({
+                    html: '<div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-2 border-white shadow-md"><i class="fa-solid fa-location-dot text-xs"></i></div>',
+                    className: '',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                })
+            }).addTo(recycleMap);
+
+            recycleMap.setView([latLng.lat, latLng.lng], recycleMap.getZoom());
+            document.getElementById('recycle-location-input').value = latLng.lat.toFixed(4) + ', ' + latLng.lng.toFixed(4);
+            
+            // Calculate distance
+            const dist = getCoordinatesDistance(latLng, recycleHQ);
+            document.getElementById('total-kilometers').value = dist.toFixed(2) + ' km';
+            document.getElementById('pickup-charge').value = '₹ ' + (dist * 5).toFixed(0) + ' Rupees';
+        }
+
+        function togglePickup(pickup) {
+            isPickupNeeded = pickup;
+            const yesBtn = document.getElementById("pickup-yes-lbl");
+            const noBtn = document.getElementById("pickup-no-lbl");
+            const locInput = document.getElementById("recycle-location-input");
+
+            if (pickup) {
+                yesBtn.className = "flex items-center justify-center space-x-2 p-3 bg-primary-50 dark:bg-primary-950/40 rounded-xl border-2 border-primary-500 cursor-pointer text-xs font-bold text-slate-800 dark:text-slate-200 transition-all shadow-sm";
+                noBtn.className = "flex items-center justify-center space-x-2 p-3 bg-white dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800/60 cursor-pointer text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all";
+                locInput.placeholder = "Click coordinates on map to select";
+                locInput.required = true;
+                locInput.value = "";
+                document.getElementById('total-kilometers').value = "0.00 km";
+                document.getElementById('pickup-charge').value = "0 Rupees";
+            } else {
+                yesBtn.className = "flex items-center justify-center space-x-2 p-3 bg-white dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800/60 cursor-pointer text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all";
+                noBtn.className = "flex items-center justify-center space-x-2 p-3 bg-primary-50 dark:bg-primary-950/40 rounded-xl border-2 border-primary-500 cursor-pointer text-xs font-bold text-slate-800 dark:text-slate-200 transition-all shadow-sm";
+                locInput.placeholder = "Not required (Self Drop-off)";
+                locInput.required = false;
+                locInput.value = "";
+                document.getElementById('total-kilometers').value = "N/A";
+                document.getElementById('pickup-charge').value = "₹ 0 (Free)";
+                if (recycleMarker) {
+                    recycleMap.removeLayer(recycleMarker);
+                    recycleMarker = null;
+                }
+            }
+        }
+
+        // POST recycle to backend
+        async function handleRecycleSubmit(event) {
+            event.preventDefault();
+            const product = document.getElementById("recycle-product").value.trim();
+            const coordinates = document.getElementById("recycle-location-input").value;
+            const distanceText = document.getElementById("total-kilometers").value;
+            const distance = parseFloat(distanceText) || 0;
+            const chargeText = document.getElementById("pickup-charge").value;
+            const pickupCharge = parseInt(chargeText.replace(/[^0-9]/g, '')) || 0;
+
+            try {
+                const response = await fetch('http://localhost:5000/api/recycle/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        product,
+                        isPickup: isPickupNeeded,
+                        coordinates,
+                        distance,
+                        pickupCharge
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    await loadDashboardData();
+
+                    const date = new Date();
+                    date.setDate(date.getDate() + 1);
+                    const dateStr = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+
+                    document.getElementById("modal-icon-container").innerHTML = '<i class="fa-solid fa-truck-pickup"></i>';
+                    document.getElementById("modal-title").textContent = "Recycling Booked!";
+                    if (isPickupNeeded) {
+                        document.getElementById("modal-desc").textContent = "Our driver has been assigned. You will earn your points once verification is complete.";
+                        document.getElementById("modal-grid-lbl1").textContent = "Scheduled Date";
+                        document.getElementById("modal-grid-val1").textContent = dateStr + " (10 AM - 2 PM)";
+                    } else {
+                        document.getElementById("modal-desc").textContent = "Please drop off the e-waste at our Delhi HQ at your convenience. Bring the booking receipt.";
+                        document.getElementById("modal-grid-lbl1").textContent = "Operational Hours";
+                        document.getElementById("modal-grid-val1").textContent = "Mon-Sat 9AM-6PM";
+                    }
+                    document.getElementById("modal-grid-lbl2").textContent = "Eco Points Gained";
+                    document.getElementById("modal-grid-val2").textContent = "+100 Points";
+
+                    // Reset
+                    document.getElementById("recycle-product").value = "";
+                    togglePickup(true);
+
+                    document.getElementById("global-success-modal").classList.remove("hidden");
+                } else {
+                    alert("Booking failed: " + result.message);
+                }
+            } catch (err) {
+                console.error("Recycling dispatch error:", err);
+            }
+        }
+
+        // ==========================================
+        // 4. DONATE MODULE LOGIC
+        // ==========================================
+        function initDonationDragDrop() {
+            const dropZone = document.getElementById("donate-drop-zone");
+            const fileInput = document.getElementById("donate-file-input");
+
+            // Prevent default drag behaviors
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            // Highlight drop zone when item is dragged over it
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.add("border-primary-500", "bg-primary-50/10");
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.remove("border-primary-500", "bg-primary-50/10");
+                }, false);
+            });
+
+            // Handle dropped files
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                fileInput.files = files;
+                
+                // Trigger change event manual
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }, false);
+        }
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function previewDonateImage(event) {
+            const input = event.target;
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById("donate-image-preview");
+                    img.src = e.target.result; // Base64 data URL
+                    img.classList.remove("hidden");
+                    document.getElementById("donate-upload-placeholder").classList.add("hidden");
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // POST donation details to backend
+        async function handleDonateSubmit(event) {
+            event.preventDefault();
+            const productDetails = document.getElementById("donate-product-details").value.trim();
+            const contactName = document.getElementById("donate-name").value.trim();
+            const phone = document.getElementById("donate-phone").value.trim();
+            const address = document.getElementById("donate-address").value.trim();
+            const imgPreview = document.getElementById("donate-image-preview");
+            const image = imgPreview.src; // Base64 data URL string
+
+            try {
+                const response = await fetch('http://localhost:5000/api/donate/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        productDetails,
+                        image,
+                        contactName,
+                        phone,
+                        address
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    await loadDashboardData();
+
+                    document.getElementById("modal-icon-container").innerHTML = '<i class="fa-solid fa-hand-holding-heart"></i>';
+                    document.getElementById("modal-title").textContent = "Donation Registered!";
+                    document.getElementById("modal-desc").textContent = "Thank you for making a difference. Our volunteer representative will collect the device at your address coordinates.";
+                    document.getElementById("modal-grid-lbl1").textContent = "Pickup Window";
+                    document.getElementById("modal-grid-val1").textContent = "Next 48 Hours";
+                    document.getElementById("modal-grid-lbl2").textContent = "Reward Credited";
+                    document.getElementById("modal-grid-val2").textContent = "+150 Eco Points";
+
+                    // Reset
+                    document.getElementById("donate-product-details").value = "";
+                    document.getElementById("donate-phone").value = "";
+                    document.getElementById("donate-address").value = "";
+                    document.getElementById("donate-image-preview").classList.add("hidden");
+                    document.getElementById("donate-image-preview").src = "#";
+                    document.getElementById("donate-upload-placeholder").classList.remove("hidden");
+
+                    document.getElementById("global-success-modal").classList.remove("hidden");
+                } else {
+                    alert("Donation registration failed: " + result.message);
+                }
+            } catch (err) {
+                console.error("Donation dispatch error:", err);
+            }
+        }
+
+        // ==========================================
+        // 5. FIND BINS (LOCATIONS) MODULE LOGIC
+        // ==========================================
+        let locationsMap;
+        let locationsMarkers = [];
+        const predefinedHubs = [
+            { name: 'Eco Recycling Center (Thrissur)', lat: 10.5167, lon: 76.2167 },
+            { name: 'Tech Disposal Station (Palakkad)', lat: 10.7744, lon: 76.6563 },
+            { name: 'Green E-Waste Recycling (Kochi)', lat: 9.9312, lon: 76.2673 },
+            { name: 'E-Waste Recycling Centers (Calicut)', lat: 11.2588, lon: 75.7804 },
+            { name: 'E-Waste Recycling (Trivandrum)', lat: 8.6040, lon: 76.9857 },
+            { name: 'E-Waste Recycling Co (Mangalore)', lat: 12.4984, lon: 74.9896 }
+        ];
+
+        function initLocationsMap() {
+            locationsMap = L.map('locations-map').setView([10.2, 76.2], 8);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(locationsMap);
+
+            loadPredefinedLocations();
+        }
+
+        function loadPredefinedLocations() {
+            locationsMarkers.forEach(m => locationsMap.removeLayer(m));
+            locationsMarkers = [];
+
+            predefinedHubs.forEach(hub => {
+                const marker = L.marker([hub.lat, hub.lon], {
+                    icon: L.divIcon({
+                        html: '<div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center border-2 border-white shadow-md"><i class="fa-solid fa-dumpster text-xs"></i></div>',
+                        className: '',
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 16]
+                    })
+                }).addTo(locationsMap).bindPopup(`<b>${hub.name}</b><br>eRevive Collection Bin`);
+                locationsMarkers.push(marker);
+            });
+        }
+
+        function findNearestSites() {
+            if (navigator.geolocation) {
+                // Show loading skeleton
+                document.getElementById("osm-list-loading").classList.remove("hidden");
+                document.getElementById("list-empty-state").classList.add("hidden");
+                document.getElementById('disposalSites').innerHTML = "";
+
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+
+                    locationsMap.setView([lat, lon], 12);
+
+                    L.marker([lat, lon], {
+                        icon: L.divIcon({
+                            html: '<div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-2 border-white shadow-md animate-bounce"><i class="fa-solid fa-street-view text-xs"></i></div>',
+                            className: '',
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16]
+                        })
+                    }).addTo(locationsMap).bindPopup("You are here").openPopup();
+
+                    fetchOSMSites(lat, lon);
+                }, function() {
+                    document.getElementById("osm-list-loading").classList.add("hidden");
+                    document.getElementById("list-empty-state").classList.remove("hidden");
+                    alert("Location access denied or unavailable. Visualizing regional centers.");
+                });
+            } else {
+                alert("Geolocation not supported by this browser.");
+            }
+        }
+
+        function fetchOSMSites(lat, lon) {
+            const apiUrl = `https://nominatim.openstreetmap.org/search?format=json&q=recycling&lat=${lat}&lon=${lon}&limit=5`;
+            const listEmpty = document.getElementById("list-empty-state");
+            const loadingList = document.getElementById("osm-list-loading");
+
+            fetch(apiUrl, {
+                headers: { 'Accept-Language': 'en' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const list = document.getElementById('disposalSites');
+                list.innerHTML = "";
+                loadingList.classList.add("hidden");
+                listEmpty.classList.add("hidden");
+
+                if (data.length === 0) {
+                    list.innerHTML = `
+                        <div class="p-4 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 text-center rounded-2xl text-xs font-semibold border border-amber-200 dark:border-amber-800">
+                            No e-waste disposal containers found nearby. Using standard markers.
+                        </div>
+                    `;
+                    return;
+                }
+
+                data.forEach(place => {
+                    const placeLat = parseFloat(place.lat);
+                    const placeLon = parseFloat(place.lon);
+                    const distance = getCoordinatesDistance({lat, lng: lon}, {lat: placeLat, lng: placeLon});
+
+                    const card = document.createElement('li');
+                    card.className = "bg-white dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 shadow-sm space-y-2 hover-lift transition-all";
+                    
+                    const cleanName = place.display_name.split(',')[0] || "Recycling Bin";
+                    const subAddress = place.display_name.split(',').slice(1, 3).join(',') || "Address near coordinates";
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-bold text-slate-800 dark:text-white text-xs">${cleanName}</h4>
+                                <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 leading-relaxed">${subAddress}</p>
+                            </div>
+                            <span class="text-[10px] font-bold text-emerald-600 bg-primary-50 dark:bg-primary-950 px-2.5 py-1 rounded-full shrink-0">
+                                ${distance.toFixed(1)} km
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px]">
+                            <span class="text-emerald-500 font-semibold flex items-center">
+                                <span class="w-1.5 h-1.5 bg-emerald-550 rounded-full mr-1.5 animate-pulse"></span> Open Now
+                            </span>
+                            <a href="https://www.google.com/maps/search/?api=1&query=${placeLat},${placeLon}" target="_blank" class="text-slate-800 dark:text-slate-300 hover:text-primary-500 font-bold flex items-center transition-all">
+                                Directions <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[9px]"></i>
+                            </a>
+                        </div>
+                    `;
+                    list.appendChild(card);
+
+                    const marker = L.marker([placeLat, placeLon], {
+                        icon: L.divIcon({
+                            html: '<div class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center border-2 border-white shadow-md"><i class="fa-solid fa-dumpster-trash text-xs"></i></div>',
+                            className: '',
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16]
+                        })
+                    }).addTo(locationsMap).bindPopup(`<b>${cleanName}</b><br>e-waste drop-off bin`);
+                    locationsMarkers.push(marker);
+                });
+            })
+            .catch(err => {
+                console.error("OSM Nominatim Error:", err);
+                loadingList.classList.add("hidden");
+                listEmpty.innerHTML = `
+                    <i class="fa-solid fa-circle-exclamation text-3xl mb-2 text-red-500/60"></i>
+                    <p class="text-xs font-semibold text-gray-700 dark:text-slate-400">Failed to connect to Nominatim database.</p>
+                    <p class="text-[10px] text-slate-400 mt-1">Please reference map markers directly.</p>
+                `;
+                listEmpty.classList.remove("hidden");
+            });
+        }
+
+        // ==========================================
+        // 6. REWARDS HUB MODULE LOGIC
+        // ==========================================
+        async function claimVoucher(name, cost) {
+            const reward = rewardsByName[name];
+            if (!reward) return alert('Reward data is unavailable. Please refresh the page.');
+            if (ecoPoints < reward.cost) {
+                alert("Insufficient points! Recycle or sell old electronics to earn points.");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/rewards/redeem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        rewardId: reward._id
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    // Update points and logs
+                    await loadDashboardData();
+
+                    document.getElementById("voucher-modal-code").textContent = result.data.code;
+                    document.getElementById("voucher-modal-desc").textContent = `Successfully redeemed ${reward.cost} points for ${name}. Your code is shown above.`;
+                    document.getElementById("voucher-success-modal").classList.remove("hidden");
+                } else {
+                    alert("Redemption failed: " + result.message);
+                }
+            } catch (err) {
+                console.error("Redeem dispatch error:", err);
+            }
+        }
+
+        function closeVoucherModal() {
+            document.getElementById("voucher-success-modal").classList.add("hidden");
+        }
+
+        // Render transactions history
+        function renderTransactionsList(transactions) {
+            const list = document.getElementById("redemption-history-list");
+            if (!list) return;
+            list.innerHTML = "";
+            if (transactions.length === 0) {
+                list.innerHTML = `<li class="py-3 text-center text-slate-400">No transactions recorded yet</li>`;
+                return;
+            }
+            transactions.forEach(tx => {
+                const date = new Date(tx.createdAt);
+                const dateStr = date.getDate() + "th " + date.toLocaleString('default', { month: 'short' });
+                const li = document.createElement("li");
+                li.className = "py-3 flex justify-between items-center animate-fade-in";
+                li.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full ${tx.type === 'Credit' ? 'bg-emerald-500' : 'bg-red-500'}"></span>
+                        <span class="font-semibold text-slate-700 dark:text-slate-350">${tx.description} (${tx.type === 'Credit' ? '+' : '-'}${tx.amount} pts)</span>
+                    </div>
+                    <span class="text-slate-400 dark:text-slate-500 font-medium">${dateStr}</span>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        // ==========================================
+        // HELPERS
+        // ==========================================
+        function getCoordinatesDistance(loc1, loc2) {
+            const R = 6371; 
+            const dLat = (loc2.lat - loc1.lat) * Math.PI / 180;
+            const dLng = (loc2.lng - loc1.lng) * Math.PI / 180;
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(loc1.lat * Math.PI / 180) * Math.cos(loc2.lat * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function closeSuccessModal() {
+            document.getElementById("global-success-modal").classList.add("hidden");
+        }
+    </script>
+</body>
+</html>
