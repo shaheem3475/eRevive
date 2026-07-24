@@ -17,7 +17,7 @@
   </p>
 
   <p align="center">
-    <a href="https://erevive.vercel.app"><b>🌐 Live Application Demo</b></a> •
+    <a href="https://e-revive-ten.vercel.app"><b>🌐 Live Application Demo</b></a> •
     <a href="https://erevive-backend.onrender.com/health"><b>⚡ Backend Health API</b></a> •
     <a href="https://github.com/shaheem3475/eRevive"><b>📦 GitHub Repository</b></a> •
     <a href="docs/API.md"><b>📖 API Documentation</b></a>
@@ -300,20 +300,16 @@ GEMINI_API_KEY=your_google_gemini_api_key
 
 ## 👨‍💻 Author & Developer Info
 
-**Developed by Shaheem Puzhakkal**  
-*Full-Stack Engineer & AI Solution Developer*
+**Developed by Mohammed Shaheem **  
+
 
 - 🌐 GitHub: [@shaheem3475](https://github.com/shaheem3475)
-- 📧 Project Contact: `shaheem3475@gmail.com`
+- 📧 Project Contact: `shaheempuzhakkal@gmail.com`
 - 🏫 Platform: **eRevive Circular E-Waste Management**
 
 ---
 
-## 📜 License
 
-Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
-
----
 
 <div align="center">
 
