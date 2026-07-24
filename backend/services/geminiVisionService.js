@@ -1,16 +1,18 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { calculateAIDecisionDefaults } = require('./businessRules');
 
 /**
- * Service layer for Google Gemini Vision AI analysis.
+ * Service layer for Google Gemini Vision AI analysis & AI Decision Engine.
  * Keeps Gemini SDK logic decoupled from controllers.
  */
 class GeminiVisionService {
     /**
      * Analyzes an uploaded image using Google Gemini Multimodal Vision API.
+     * Generates device identification, market valuation, intelligent recommendation, and eco-impact.
      * 
      * @param {string} imageBase64 - Base64 encoded image string (with or without data URI header)
      * @param {string} mimeType - Image mime type (e.g., 'image/jpeg', 'image/png')
-     * @returns {Promise<Object>} Structured analysis JSON object
+     * @returns {Promise<Object>} Extended AI Decision Engine analysis JSON object
      */
     static async analyzeDeviceImage(imageBase64, mimeType = 'image/jpeg') {
         const apiKey = process.env.GEMINI_API_KEY;
@@ -46,7 +48,7 @@ class GeminiVisionService {
             }
         };
 
-        const prompt = `You are an expert AI Vision engine for eRevive, an AI-powered E-Waste Management Platform.
+        const prompt = `You are an expert AI Decision Engine for eRevive, an AI-powered E-Waste Management Platform.
 Analyze the provided image of an electronic device or e-waste item and return ONLY a valid JSON object matching this structure:
 
 {
@@ -55,8 +57,25 @@ Analyze the provided image of an electronic device or e-waste item and return ON
   "category": "Broad e-waste category (e.g., Smartphone, Laptop, Tablet, Audio, Smartwatch, Monitor, Gaming Console, Accessory, Component, Other)",
   "condition": "Estimated physical condition from visible appearance (Like New | Good | Fair | Poor | Broken)",
   "confidence": Integer percentage between 0 and 100 representing certainty of identification,
-  "reason": "Concise 1-2 sentence explanation detailing visible cosmetic condition, wear, or physical features observed."
+  "estimatedValue": {
+      "min": Estimated minimum resale/reuse value in INR (Integer, e.g. 65000),
+      "max": Estimated maximum resale/reuse value in INR (Integer, e.g. 72000),
+      "currency": "INR"
+  },
+  "recommendation": "Intelligent action recommendation (SELL | DONATE | RECYCLE | STORE)",
+  "reason": "Detailed 1-2 sentence explanation considering device category, visible physical condition, estimated market value, potential reuse, and environmental benefit.",
+  "ecoImpact": {
+      "carbonSavedKg": Estimated CO2 saved in Kg if reused or recycled (Number/Integer),
+      "ewastePreventedKg": Estimated e-waste diverted from landfill in Kg (Number),
+      "treesEquivalent": Equivalent trees saved (Integer)
+  }
 }
+
+Decision Logic Guidance for recommendation:
+- SELL: High commercial resale value, functional condition (Like New / Good / Excellent).
+- DONATE: Functional condition (Good / Fair) suitable for community reuse, digital inclusion.
+- RECYCLE: Non-functional / obsolete / broken state (Poor / Broken) best for raw material recovery.
+- STORE: Low current market demand or personal backup utility.
 
 Special Instructions:
 1. If the image is not an electronic device, gadget, or e-waste item, return:
@@ -66,7 +85,10 @@ Special Instructions:
   "category": "Unknown",
   "condition": "Unknown",
   "confidence": 0,
-  "reason": "No electronic device or e-waste item was detected in the provided image."
+  "estimatedValue": { "min": 0, "max": 0, "currency": "INR" },
+  "recommendation": "STORE",
+  "reason": "No electronic device or e-waste item was detected in the provided image.",
+  "ecoImpact": { "carbonSavedKg": 0, "ewastePreventedKg": 0, "treesEquivalent": 0 }
 }
 2. Ensure strict JSON format without any markdown formatting or surrounding backticks.`;
 
@@ -110,14 +132,33 @@ Special Instructions:
 
             const parsedResult = JSON.parse(cleanJsonText);
 
-            // Normalize fields and boundaries
+            const deviceName = String(parsedResult.deviceName || 'Unknown Device').trim();
+            const brand = String(parsedResult.brand || 'Unknown').trim();
+            const category = String(parsedResult.category || 'Other').trim();
+            const condition = String(parsedResult.condition || 'Fair').trim();
+            const confidence = Math.max(0, Math.min(100, parseInt(parsedResult.confidence, 10) || 0));
+
+            // Compute/normalize decision defaults
+            const defaults = calculateAIDecisionDefaults({
+                deviceName,
+                category,
+                condition,
+                estimatedValue: parsedResult.estimatedValue,
+                recommendation: parsedResult.recommendation,
+                reason: parsedResult.reason,
+                ecoImpact: parsedResult.ecoImpact
+            });
+
             return {
-                deviceName: String(parsedResult.deviceName || 'Unknown Device').trim(),
-                brand: String(parsedResult.brand || 'Unknown').trim(),
-                category: String(parsedResult.category || 'Other').trim(),
-                condition: String(parsedResult.condition || 'Fair').trim(),
-                confidence: Math.max(0, Math.min(100, parseInt(parsedResult.confidence, 10) || 0)),
-                reason: String(parsedResult.reason || 'AI analysis complete.').trim()
+                deviceName,
+                brand,
+                category,
+                condition,
+                confidence,
+                estimatedValue: defaults.estimatedValue,
+                recommendation: defaults.recommendation,
+                reason: defaults.reason,
+                ecoImpact: defaults.ecoImpact
             };
         } catch (error) {
             console.error('Gemini Vision Service Error:', error);

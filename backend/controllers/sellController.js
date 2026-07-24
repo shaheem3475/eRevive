@@ -7,7 +7,19 @@ const { calculateSale } = require('../services/businessRules');
 const createSellRequest = async (req, res, next) => {
     try {
         const user = req.user;
-        const { deviceName, brand = 'Generic', category = 'Smartphone', condition = 'Good', defects = [], customDefects = '' } = req.body;
+        const { 
+            deviceName, 
+            brand = 'Generic', 
+            category = 'Smartphone', 
+            condition = 'Good', 
+            defects = [], 
+            customDefects = '',
+            aiRecommendation,
+            aiEstimatedValue,
+            aiConfidence,
+            aiReason,
+            aiEcoImpact
+        } = req.body;
 
         if (!deviceName) {
             return res.status(400).json({ success: false, message: 'deviceName is required', errors: [] });
@@ -32,7 +44,12 @@ const createSellRequest = async (req, res, next) => {
             finalPrice,
             defects: defects || [],
             customDefects: customDefects || '',
-            status: 'Pending'
+            status: 'Pending',
+            aiRecommendation,
+            aiEstimatedValue,
+            aiConfidence,
+            aiReason,
+            aiEcoImpact
         });
 
         // Create notification

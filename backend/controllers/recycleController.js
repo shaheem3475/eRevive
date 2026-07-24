@@ -7,7 +7,16 @@ const { calculatePickup } = require('../services/businessRules');
 const createRecycleRequest = async (req, res, next) => {
     try {
         const user = req.user;
-        const { product, isPickup = true, coordinates } = req.body;
+        const { 
+            product, 
+            isPickup = true, 
+            coordinates,
+            aiRecommendation,
+            aiEstimatedValue,
+            aiConfidence,
+            aiReason,
+            aiEcoImpact
+        } = req.body;
 
         if (!product) {
             return res.status(400).json({ success: false, message: 'product details are required' });
@@ -24,7 +33,12 @@ const createRecycleRequest = async (req, res, next) => {
             isPickup,
             ...pickupDetails,
             status: 'Pending',
-            scheduledDate
+            scheduledDate,
+            aiRecommendation,
+            aiEstimatedValue,
+            aiConfidence,
+            aiReason,
+            aiEcoImpact
         });
 
         // Notification

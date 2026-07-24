@@ -7,7 +7,18 @@ const { uploadImage } = require('../services/cloudinaryService');
 const createDonateRequest = async (req, res, next) => {
     try {
         const user = req.user;
-        const { productDetails, image, contactName, phone, address } = req.body;
+        const { 
+            productDetails, 
+            image, 
+            contactName, 
+            phone, 
+            address,
+            aiRecommendation,
+            aiEstimatedValue,
+            aiConfidence,
+            aiReason,
+            aiEcoImpact
+        } = req.body;
 
         if (!productDetails || !image || !contactName || !phone || !address) {
             return res.status(400).json({ success: false, message: 'All donation details (productDetails, image, contactName, phone, address) are required' });
@@ -25,7 +36,12 @@ const createDonateRequest = async (req, res, next) => {
             phone,
             address,
             pointsAwarded: 150,
-            status: 'Pending'
+            status: 'Pending',
+            aiRecommendation,
+            aiEstimatedValue,
+            aiConfidence,
+            aiReason,
+            aiEcoImpact
         });
 
         // Notification

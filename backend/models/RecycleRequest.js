@@ -33,6 +33,26 @@ const recycleRequestSchema = new mongoose.Schema({
     },
     scheduledDate: {
         type: Date
+    },
+    aiRecommendation: {
+        type: String,
+        enum: ['SELL', 'DONATE', 'RECYCLE', 'STORE']
+    },
+    aiEstimatedValue: {
+        min: { type: Number },
+        max: { type: Number },
+        currency: { type: String, default: 'INR' }
+    },
+    aiConfidence: {
+        type: Number
+    },
+    aiReason: {
+        type: String
+    },
+    aiEcoImpact: {
+        carbonSavedKg: { type: Number },
+        ewastePreventedKg: { type: Number },
+        treesEquivalent: { type: Number }
     }
 }, { timestamps: true });
 

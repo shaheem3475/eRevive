@@ -3,27 +3,42 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 
 const setupSecurity = (app) => {
-    // CORS setup
-    const allowedOrigins = (process.env.FRONTEND_ORIGINS || 'http://localhost:5000,http://localhost:3000')
-        .split(',').map(origin => origin.trim()).filter(Boolean);
+    // CORS setup supporting local dev, FRONTEND_ORIGINS, and Vercel domains
+    const defaultAllowed = [
+        'http://localhost:5000',
+        'http://localhost:3000',
+        'http://localhost:5500',
+        'http://127.0.0.1:5500',
+        'http://127.0.0.1:5000'
+    ];
+    const envAllowed = (process.env.FRONTEND_ORIGINS || '')
+        .split(',').map(o => o.trim()).filter(Boolean);
+    const allowedOrigins = Array.from(new Set([...defaultAllowed, ...envAllowed]));
+
     app.use(cors({
         origin(origin, callback) {
-            if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-            return callback(new Error('Origin not allowed by CORS'));
+            // Allow server-to-server / same-origin requests (origin === undefined)
+            if (!origin) return callback(null, true);
+            // Allow exact origin matches or any Vercel deployment origin
+            if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+                return callback(null, true);
+            }
+            return callback(new Error('Origin not allowed by CORS policy'));
         },
-        methods: ['GET', 'POST', 'PUT', 'DELETE'],
-        allowedHeaders: ['Content-Type', 'Authorization']
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true
     }));
 
     app.use(helmet({
         contentSecurityPolicy: {
             directives: {
                 defaultSrc: ["'self'"],
-                scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.tailwindcss.com', 'https://www.gstatic.com', 'https://unpkg.com'],
-                styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdnjs.cloudflare.com', 'https://unpkg.com'],
+                scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.tailwindcss.com', 'https://www.gstatic.com', 'https://unpkg.com', 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com'],
+                styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://cdnjs.cloudflare.com', 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
                 fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdnjs.cloudflare.com'],
-                imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-                connectSrc: ["'self'", 'https://*.googleapis.com', 'https://nominatim.openstreetmap.org'],
+                imgSrc: ["'self'", 'data:', 'https:', 'http:', 'blob:'],
+                connectSrc: ["'self'", 'https:', 'http:', 'wss:'],
                 frameSrc: ["'self'", 'https://*.firebaseapp.com']
             }
         },

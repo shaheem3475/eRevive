@@ -1,6 +1,6 @@
-require('dotenv').config({ override: true });
-const express = require('express');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
+const express = require('express');
 const connectDB = require('./config/db');
 const setupSecurity = require('./middleware/security');
 const errorHandler = require('./middleware/errorHandler');
@@ -29,6 +29,17 @@ setupSecurity(app);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(sanitizeRequest);
+
+// Health Check endpoint for Render / monitoring
+app.get(['/health', '/api/health'], (req, res) => {
+    res.status(200).json({
+        status: 'UP',
+        message: 'eRevive API service is running',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
 
 app.get('/api/config/firebase', (req, res) => {
     const config = {

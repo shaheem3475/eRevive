@@ -125,10 +125,98 @@ const calculatePickup = (coordinates, isPickup) => {
     return { coordinates: `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`, distance: Number(distance.toFixed(2)), pickupCharge: Math.round(distance * 5) };
 };
 
+/**
+ * Normalizes and calculates AI Decision Engine defaults (estimated value range, recommendation, eco impact).
+ */
+const calculateAIDecisionDefaults = ({ deviceName, category, condition, estimatedValue, recommendation, reason, ecoImpact }) => {
+    const saleInfo = calculateSale({ deviceName, category, condition });
+    const finalVal = saleInfo.finalPrice;
+
+    // 1. Estimated Value (INR)
+    let minVal = estimatedValue && Number(estimatedValue.min) > 0 ? Number(estimatedValue.min) : Math.round(finalVal * 0.9);
+    let maxVal = estimatedValue && Number(estimatedValue.max) > 0 ? Number(estimatedValue.max) : Math.round(finalVal * 1.1);
+    if (minVal > maxVal) { const tmp = minVal; minVal = maxVal; maxVal = tmp; }
+    const currency = (estimatedValue && estimatedValue.currency) ? estimatedValue.currency : 'INR';
+
+    // 2. Recommendation resolution (SELL, DONATE, RECYCLE, STORE)
+    const validRecs = ['SELL', 'DONATE', 'RECYCLE', 'STORE'];
+    let rec = (recommendation || '').toUpperCase().trim();
+    if (!validRecs.includes(rec)) {
+        const condLower = String(condition).toLowerCase();
+        if (['like new', 'excellent', 'good'].includes(condLower) && finalVal >= 5000) {
+            rec = 'SELL';
+        } else if (['good', 'fair'].includes(condLower)) {
+            rec = 'DONATE';
+        } else if (['poor', 'broken'].includes(condLower)) {
+            rec = 'RECYCLE';
+        } else {
+            rec = 'STORE';
+        }
+    }
+
+    // 3. Reason resolution
+    let recReason = reason;
+    if (!recReason) {
+        if (rec === 'SELL') {
+            recReason = `${deviceName} retains high market resale value in ${condition} condition. Selling offers maximum value recovery.`;
+        } else if (rec === 'DONATE') {
+            recReason = `Device is functional in ${condition} condition. Donating extends product lifecycle and supports digital inclusion.`;
+        } else if (rec === 'RECYCLE') {
+            recReason = `Device is in ${condition} state. Responsible recycling prevents hazardous e-waste from entering landfills.`;
+        } else {
+            recReason = `Consider storing safely as a spare backup device or repurposing for home secondary use.`;
+        }
+    }
+
+    // 4. Eco Impact resolution
+    const catLower = String(category).toLowerCase();
+    let defaultCarbon = 15;
+    let defaultEwaste = 0.5;
+    let defaultTrees = 2;
+
+    if (catLower.includes('laptop') || catLower.includes('desktop') || catLower.includes('television') || catLower.includes('monitor')) {
+        defaultCarbon = 45;
+        defaultEwaste = 2.5;
+        defaultTrees = 8;
+    } else if (catLower.includes('phone') || catLower.includes('tablet')) {
+        defaultCarbon = 18;
+        defaultEwaste = 0.4;
+        defaultTrees = 3;
+    } else if (catLower.includes('watch') || catLower.includes('audio') || catLower.includes('headphone') || catLower.includes('accessory')) {
+        defaultCarbon = 8;
+        defaultEwaste = 0.2;
+        defaultTrees = 1;
+    }
+
+    const carbonSavedKg = (ecoImpact && typeof ecoImpact.carbonSavedKg === 'number' && ecoImpact.carbonSavedKg > 0)
+        ? ecoImpact.carbonSavedKg : defaultCarbon;
+    const ewastePreventedKg = (ecoImpact && typeof ecoImpact.ewastePreventedKg === 'number' && ecoImpact.ewastePreventedKg > 0)
+        ? ecoImpact.ewastePreventedKg : defaultEwaste;
+    const treesEquivalent = (ecoImpact && typeof ecoImpact.treesEquivalent === 'number' && ecoImpact.treesEquivalent > 0)
+        ? ecoImpact.treesEquivalent : defaultTrees;
+
+    return {
+        estimatedValue: {
+            min: minVal,
+            max: maxVal,
+            currency: currency
+        },
+        recommendation: rec,
+        reason: recReason,
+        ecoImpact: {
+            carbonSavedKg,
+            ewastePreventedKg,
+            treesEquivalent
+        }
+    };
+};
+
 module.exports = {
     CATEGORY_BASE_PRICES,
     CONDITION_MULTIPLIERS,
     DEFECT_DEDUCTIONS,
     calculateSale,
-    calculatePickup
+    calculatePickup,
+    calculateAIDecisionDefaults
 };
+

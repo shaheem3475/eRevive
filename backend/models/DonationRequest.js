@@ -34,6 +34,26 @@ const donationRequestSchema = new mongoose.Schema({
         type: String,
         enum: ['Pending', 'Approved', 'Collected', 'Completed', 'Rejected'],
         default: 'Pending'
+    },
+    aiRecommendation: {
+        type: String,
+        enum: ['SELL', 'DONATE', 'RECYCLE', 'STORE']
+    },
+    aiEstimatedValue: {
+        min: { type: Number },
+        max: { type: Number },
+        currency: { type: String, default: 'INR' }
+    },
+    aiConfidence: {
+        type: Number
+    },
+    aiReason: {
+        type: String
+    },
+    aiEcoImpact: {
+        carbonSavedKg: { type: Number },
+        ewastePreventedKg: { type: Number },
+        treesEquivalent: { type: Number }
     }
 }, { timestamps: true });
 

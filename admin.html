@@ -544,6 +544,9 @@
 
     <!-- ADMIN SYSTEM SCRIPT -->
     <script>
+        // Dynamic API Base URL setup (supports local dev, Render, Vercel cross-origin)
+        const API_BASE_URL = window.API_BASE_URL || localStorage.getItem('API_BASE_URL') || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : '');
+
         let token = "";
         let firebaseAuthInitialized = false;
 
@@ -554,7 +557,7 @@
 
         const initializeFirebase = async () => {
             if (firebaseAuthInitialized) return firebase.auth();
-            const response = await fetch('http://localhost:5000/api/config/firebase');
+            const response = await fetch(`${API_BASE_URL}/api/config/firebase`);
             const result = await response.json();
             if (!result.success) throw new Error(result.message);
             firebase.initializeApp(result.data);
@@ -591,7 +594,7 @@
         // Stats Loader
         async function loadAdminStats() {
             try {
-                const response = await fetch('http://localhost:5000/api/admin/stats', {
+                const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
@@ -620,7 +623,7 @@
         // 1. Module Users
         async function loadUsersModule() {
             try {
-                const res = await fetch('http://localhost:5000/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`${API_BASE_URL}/api/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const result = await res.json();
                 if (result.success) {
                     allUsersData = result.data || [];
@@ -664,7 +667,7 @@
             document.getElementById("user-modal").classList.remove("hidden");
 
             try {
-                const res = await fetch(`http://localhost:5000/api/admin/users/${userId}/activity`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/activity`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const result = await res.json();
                 if (result.success && result.data.length > 0) {
                     body.innerHTML = result.data.map(act => `
@@ -691,7 +694,7 @@
         // 2. Module Donations
         async function loadDonationsModule() {
             try {
-                const res = await fetch('http://localhost:5000/api/admin/donations', { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`${API_BASE_URL}/api/admin/donations`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const result = await res.json();
                 if (result.success) {
                     allDonationsData = result.data || [];
@@ -700,6 +703,23 @@
             } catch (e) {
                 console.error("Error loading donations:", e);
             }
+        }
+
+        function formatAIRecBadge(item) {
+            if (!item || !item.aiRecommendation) {
+                return `<span class="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-slate-800 text-slate-400 border border-slate-700">N/A</span>`;
+            }
+            const rec = item.aiRecommendation;
+            let badgeClass = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+            if (rec === 'DONATE') badgeClass = "bg-blue-500/20 text-blue-400 border-blue-500/30";
+            if (rec === 'RECYCLE') badgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
+            if (rec === 'STORE') badgeClass = "bg-purple-500/20 text-purple-400 border-purple-500/30";
+
+            const estVal = (item.aiEstimatedValue && item.aiEstimatedValue.min) 
+                ? ` (₹${Math.round(item.aiEstimatedValue.min / 1000)}k-₹${Math.round(item.aiEstimatedValue.max / 1000)}k)` 
+                : '';
+
+            return `<span title="${item.aiReason || 'AI Decision'}" class="px-2 py-0.5 rounded-full text-[9px] font-extrabold border ${badgeClass} inline-flex items-center space-x-1"><i class="fa-solid fa-wand-magic-sparkles text-[8px] mr-1"></i>${rec}${estVal}</span>`;
         }
 
         function renderDonationsTable(donations) {
@@ -713,7 +733,10 @@
                     <td class="p-4">
                         <img src="${d.imageUrl}" class="w-10 h-10 object-cover rounded-lg border border-slate-800" alt="Donation"/>
                     </td>
-                    <td class="p-4 font-bold text-white">${d.productDetails}</td>
+                    <td class="p-4 font-bold text-white">
+                        <div>${d.productDetails}</div>
+                        <div class="mt-1">${formatAIRecBadge(d)}</div>
+                    </td>
                     <td class="p-4 text-slate-300">${d.user ? d.user.fullName : d.contactName}</td>
                     <td class="p-4 text-slate-400">${d.phone}</td>
                     <td class="p-4 text-slate-400 max-w-xs truncate">${d.address}</td>
@@ -735,7 +758,7 @@
         // 3. Module Sell Devices
         async function loadSellModule() {
             try {
-                const res = await fetch('http://localhost:5000/api/admin/sell', { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`${API_BASE_URL}/api/admin/sell`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const result = await res.json();
                 if (result.success) {
                     allSellData = result.data || [];
@@ -754,10 +777,13 @@
             }
             tbody.innerHTML = sells.map(s => `
                 <tr class="hover:bg-slate-900/50">
-                    <td class="p-4 font-bold text-white">${s.deviceName}</td>
+                    <td class="p-4 font-bold text-white">
+                        <div>${s.deviceName}</div>
+                        <div class="mt-1">${formatAIRecBadge(s)}</div>
+                    </td>
                     <td class="p-4 text-slate-300">${s.user ? s.user.fullName : 'Seller'}</td>
                     <td class="p-4 text-slate-400">${(s.defects || []).join(', ') || 'None'} ${s.customDefects ? '(' + s.customDefects + ')' : ''}</td>
-                    <td class="p-4 font-extrabold text-emerald-400">$${s.finalPrice}</td>
+                    <td class="p-4 font-extrabold text-emerald-400">₹${s.finalPrice}</td>
                     <td class="p-4 text-slate-400">${new Date(s.createdAt).toLocaleDateString()}</td>
                     <td class="p-4">
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${s.status === 'Approved' || s.status === 'Paid' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : s.status === 'Rejected' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">
@@ -792,7 +818,7 @@
         // 4. Module Recycle Requests
         async function loadRecycleModule() {
             try {
-                const res = await fetch('http://localhost:5000/api/admin/recycle', { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`${API_BASE_URL}/api/admin/recycle`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const result = await res.json();
                 if (result.success) {
                     allRecycleData = result.data || [];
@@ -811,7 +837,10 @@
             }
             tbody.innerHTML = recycles.map(r => `
                 <tr class="hover:bg-slate-900/50">
-                    <td class="p-4 font-bold text-white">${r.product}</td>
+                    <td class="p-4 font-bold text-white">
+                        <div>${r.product}</div>
+                        <div class="mt-1">${formatAIRecBadge(r)}</div>
+                    </td>
                     <td class="p-4 text-slate-300">${r.isPickup ? 'Home Pickup' : 'Self Drop-off'}</td>
                     <td class="p-4 text-slate-400 font-mono text-[10px]">${r.coordinates || 'N/A'}</td>
                     <td class="p-4 text-slate-300">${r.user ? r.user.fullName : 'User'}</td>
@@ -853,9 +882,9 @@
                 if (newStatus) bodyData.status = newStatus;
                 if (offerPrice !== undefined) bodyData.offerPrice = offerPrice;
 
-                if (moduleType === 'donation') url = `http://localhost:5000/api/admin/donations/${id}/status`;
-                else if (moduleType === 'sell') url = `http://localhost:5000/api/admin/sell/${id}/status`;
-                else if (moduleType === 'recycle') url = `http://localhost:5000/api/admin/recycle/${id}/status`;
+                if (moduleType === 'donation') url = `${API_BASE_URL}/api/admin/donations/${id}/status`;
+                else if (moduleType === 'sell') url = `${API_BASE_URL}/api/admin/sell/${id}/status`;
+                else if (moduleType === 'recycle') url = `${API_BASE_URL}/api/admin/recycle/${id}/status`;
 
                 const res = await fetch(url, {
                     method: 'PUT',
@@ -946,7 +975,7 @@
 
         async function handleLogout() {
             try {
-                await fetch('http://localhost:5000/api/auth/logout', {
+                await fetch(`${API_BASE_URL}/api/auth/logout`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -969,7 +998,7 @@
 
         async function loadAnalyticsModule() {
             try {
-                const res = await fetch('http://localhost:5000/api/admin/analytics', {
+                const res = await fetch(`${API_BASE_URL}/api/admin/analytics`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const result = await res.json();
