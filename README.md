@@ -267,17 +267,7 @@ GEMINI_API_KEY=your_google_gemini_api_key
 
 ---
 
-## 🖼️ Application Preview
 
-| User Dashboard Console | AI Recommendation Engine |
-| :---: | :---: |
-| ![User Dashboard Placeholder](eRevive.png) | ![AI Vision Card Placeholder](1000_F_471605919_A9olxL3r0Iky3LDiEO8qgRf5yvHNawoR.jpg) |
-
-| Admin Management Console | Analytics & Leaderboards |
-| :---: | :---: |
-| ![Admin Console Placeholder](background.jpg) | ![Analytics Visuals Placeholder](WhatsApp%20Image%202025-02-27%20at%2021.25.54_d5959db5.jpg) |
-
----
 
 ## 🔒 Security & Performance
 
