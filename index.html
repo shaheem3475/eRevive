@@ -250,50 +250,61 @@
 
     <!-- "How It Works" Timeline Section -->
     <section id="timeline"
-        class="max-w-6xl mx-auto px-6 py-20 relative z-10 border-t border-slate-200/40 dark:border-slate-800/40">
-        <div class="text-center space-y-4 max-w-2xl mx-auto mb-16">
+        class="max-w-6xl mx-auto px-6 py-14 relative z-10 border-t border-slate-200/40 dark:border-slate-800/40">
+        <div class="text-center space-y-3 max-w-2xl mx-auto mb-12">
             <span
                 class="text-xs uppercase font-extrabold tracking-widest text-accent bg-sky-100 dark:bg-sky-950/40 px-3.5 py-1.5 rounded-full">Process
                 Flow</span>
-            <h2 class="text-4xl font-bold text-slate-900 dark:text-white">Seamless Step-by-Step Recycling</h2>
+            <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">Seamless Step-by-Step Recycling</h2>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+            <!-- Connector Line for Desktop -->
+            <div class="hidden md:block absolute top-[3.25rem] left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-primary-500 via-accent via-emerald-500 to-purple-500 z-0 opacity-40"></div>
+
             <!-- Step 1 -->
-            <div class="space-y-4 relative timeline-dot">
+            <div class="glass-card p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 space-y-4 flex flex-col h-full hover-lift relative z-10">
                 <div
-                    class="w-10 h-10 rounded-xl bg-primary-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-primary-500/20">
+                    class="w-10 h-10 rounded-xl bg-primary-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-primary-500/20 shrink-0">
                     1</div>
-                <h3 class="font-bold text-slate-900 dark:text-white text-base">Scan & Evaluate</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Open the portal camera scanner
-                    tools or upload specs images to detect device base metrics.</p>
+                <div class="space-y-2 flex-grow">
+                    <h3 class="font-bold text-slate-900 dark:text-white text-base">Scan & Evaluate</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Open the portal camera scanner
+                        tools or upload specs images to detect device base metrics.</p>
+                </div>
             </div>
             <!-- Step 2 -->
-            <div class="space-y-4 relative timeline-dot">
+            <div class="glass-card p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 space-y-4 flex flex-col h-full hover-lift relative z-10">
                 <div
-                    class="w-10 h-10 rounded-xl bg-accent text-white flex items-center justify-center font-bold text-sm shadow-md shadow-sky-500/20">
+                    class="w-10 h-10 rounded-xl bg-accent text-white flex items-center justify-center font-bold text-sm shadow-md shadow-sky-500/20 shrink-0">
                     2</div>
-                <h3 class="font-bold text-slate-900 dark:text-white text-base">Assess & Deduct</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Specify device defects (scratch,
-                    battery, dent) to estimate cash valuation and eco bonus points.</p>
+                <div class="space-y-2 flex-grow">
+                    <h3 class="font-bold text-slate-900 dark:text-white text-base">Assess & Deduct</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Specify device defects (scratch,
+                        battery, dent) to estimate cash valuation and eco bonus points.</p>
+                </div>
             </div>
             <!-- Step 3 -->
-            <div class="space-y-4 relative timeline-dot">
+            <div class="glass-card p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 space-y-4 flex flex-col h-full hover-lift relative z-10">
                 <div
-                    class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-emerald-500/20">
+                    class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-emerald-500/20 shrink-0">
                     3</div>
-                <h3 class="font-bold text-slate-900 dark:text-white text-base">Coordinate Pickup</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Set your address pin coordinates
-                    on the leaflet maps panel, estimate distance fees, and confirm.</p>
+                <div class="space-y-2 flex-grow">
+                    <h3 class="font-bold text-slate-900 dark:text-white text-base">Coordinate Pickup</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Set your address pin coordinates
+                        on the leaflet maps panel, estimate distance fees, and confirm.</p>
+                </div>
             </div>
             <!-- Step 4 -->
-            <div class="space-y-4 relative timeline-item-last">
+            <div class="glass-card p-6 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 space-y-4 flex flex-col h-full hover-lift relative z-10">
                 <div
-                    class="w-10 h-10 rounded-xl bg-purple-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-purple-500/20">
+                    class="w-10 h-10 rounded-xl bg-purple-500 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-purple-500/20 shrink-0">
                     4</div>
-                <h3 class="font-bold text-slate-900 dark:text-white text-base">Redeem & Plant</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Earn points, progress from silver
-                    to gold tier, and claim Zomato or Amazon vouchers.</p>
+                <div class="space-y-2 flex-grow">
+                    <h3 class="font-bold text-slate-900 dark:text-white text-base">Redeem & Plant</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Earn points, progress from silver
+                        to gold tier, and claim Zomato or Amazon vouchers.</p>
+                </div>
             </div>
         </div>
     </section>
@@ -656,8 +667,8 @@
         class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div
             class="bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-md w-full shadow-2xl animate-fade-in border border-slate-200/50 dark:border-slate-800/80 relative">
-            <button onclick="toggleLoginModal(false)"
-                class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl transition-colors">
+            <button onclick="toggleLoginModal(false)" aria-label="Close modal"
+                class="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center text-xs transition-all focus:outline-none focus:ring-2 focus:ring-primary-500/50">
                 <i class="fa-solid fa-xmark"></i>
             </button>
 
@@ -681,7 +692,7 @@
                         for="login-email">Email Address</label>
                     <input required
                         class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input"
-                        id="login-email" placeholder="name@domain.com" type="email" value="salahuddin@erevive.com" />
+                        id="login-email" placeholder="name@domain.com" type="email" autocomplete="email" />
                 </div>
                 <div>
                     <label
@@ -689,7 +700,7 @@
                         for="login-password">Password</label>
                     <input required
                         class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input"
-                        id="login-password" placeholder="••••••••" type="password" value="password123" />
+                        id="login-password" placeholder="••••••••" type="password" autocomplete="current-password" />
                 </div>
                 <div class="flex justify-between items-center text-xs">
                     <label class="flex items-center space-x-2 text-slate-500 cursor-pointer font-medium">
@@ -723,7 +734,7 @@
                         for="signup-name">Full Name</label>
                     <input required
                         class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input"
-                        id="signup-name" placeholder="Salahuddin" type="text" />
+                        id="signup-name" placeholder="John Doe" type="text" autocomplete="name" />
                 </div>
                 <div>
                     <label
@@ -731,7 +742,7 @@
                         for="signup-email">Email Address</label>
                     <input required
                         class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input"
-                        id="signup-email" placeholder="name@domain.com" type="email" />
+                        id="signup-email" placeholder="name@domain.com" type="email" autocomplete="email" />
                 </div>
                 <div>
                     <label
@@ -739,7 +750,7 @@
                         for="signup-password">Password</label>
                     <input required
                         class="w-full px-4 py-3 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input"
-                        id="signup-password" placeholder="Min. 8 characters" type="password" />
+                        id="signup-password" placeholder="Min. 8 characters" type="password" autocomplete="new-password" />
                 </div>
                 <label class="flex items-start space-x-2 text-xs text-slate-500 cursor-pointer font-medium">
                     <input required type="checkbox"
