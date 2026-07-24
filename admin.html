@@ -10,6 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Centralized API Base URL Configuration -->
+    <script src="config.js"></script>
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -544,9 +546,6 @@
 
     <!-- ADMIN SYSTEM SCRIPT -->
     <script>
-        // Dynamic API Base URL setup (supports local dev, Render, Vercel cross-origin)
-        const API_BASE_URL = window.API_BASE_URL || localStorage.getItem('API_BASE_URL') || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : '');
-
         let token = "";
         let firebaseAuthInitialized = false;
 
@@ -557,7 +556,7 @@
 
         const initializeFirebase = async () => {
             if (firebaseAuthInitialized) return firebase.auth();
-            const response = await fetch(`${API_BASE_URL}/api/config/firebase`);
+            const response = await fetch(`${window.API_BASE_URL}/api/config/firebase`);
             const result = await response.json();
             if (!result.success) throw new Error(result.message);
             firebase.initializeApp(result.data);
@@ -594,7 +593,7 @@
         // Stats Loader
         async function loadAdminStats() {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
+                const response = await fetch(`${window.API_BASE_URL}/api/admin/stats`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
@@ -623,7 +622,7 @@
         // 1. Module Users
         async function loadUsersModule() {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`${window.API_BASE_URL}/api/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const result = await res.json();
                 if (result.success) {
                     allUsersData = result.data || [];
@@ -667,7 +666,7 @@
             document.getElementById("user-modal").classList.remove("hidden");
 
             try {
-                const res = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/activity`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`${window.API_BASE_URL}/api/admin/users/${userId}/activity`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const result = await res.json();
                 if (result.success && result.data.length > 0) {
                     body.innerHTML = result.data.map(act => `
@@ -694,7 +693,7 @@
         // 2. Module Donations
         async function loadDonationsModule() {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/admin/donations`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`${window.API_BASE_URL}/api/admin/donations`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const result = await res.json();
                 if (result.success) {
                     allDonationsData = result.data || [];
@@ -758,7 +757,7 @@
         // 3. Module Sell Devices
         async function loadSellModule() {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/admin/sell`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`${window.API_BASE_URL}/api/admin/sell`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const result = await res.json();
                 if (result.success) {
                     allSellData = result.data || [];
@@ -818,7 +817,7 @@
         // 4. Module Recycle Requests
         async function loadRecycleModule() {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/admin/recycle`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`${window.API_BASE_URL}/api/admin/recycle`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const result = await res.json();
                 if (result.success) {
                     allRecycleData = result.data || [];
@@ -882,9 +881,9 @@
                 if (newStatus) bodyData.status = newStatus;
                 if (offerPrice !== undefined) bodyData.offerPrice = offerPrice;
 
-                if (moduleType === 'donation') url = `${API_BASE_URL}/api/admin/donations/${id}/status`;
-                else if (moduleType === 'sell') url = `${API_BASE_URL}/api/admin/sell/${id}/status`;
-                else if (moduleType === 'recycle') url = `${API_BASE_URL}/api/admin/recycle/${id}/status`;
+                if (moduleType === 'donation') url = `${window.API_BASE_URL}/api/admin/donations/${id}/status`;
+                else if (moduleType === 'sell') url = `${window.API_BASE_URL}/api/admin/sell/${id}/status`;
+                else if (moduleType === 'recycle') url = `${window.API_BASE_URL}/api/admin/recycle/${id}/status`;
 
                 const res = await fetch(url, {
                     method: 'PUT',
@@ -975,7 +974,7 @@
 
         async function handleLogout() {
             try {
-                await fetch(`${API_BASE_URL}/api/auth/logout`, {
+                await fetch(`${window.API_BASE_URL}/api/auth/logout`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -998,7 +997,7 @@
 
         async function loadAnalyticsModule() {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/admin/analytics`, {
+                const res = await fetch(`${window.API_BASE_URL}/api/admin/analytics`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const result = await res.json();

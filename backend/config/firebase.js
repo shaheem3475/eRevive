@@ -8,11 +8,16 @@ const projectId = process.env.FIREBASE_PROJECT_ID;
 
 if (privateKey && clientEmail && projectId) {
     try {
+        const formattedKey = privateKey
+            .replace(/^["']/g, '')
+            .replace(/["']$/g, '')
+            .replace(/\\n/g, '\n');
+
         firebaseApp = admin.initializeApp({
             credential: admin.credential.cert({
                 projectId,
                 clientEmail,
-                privateKey: privateKey.replace(/\\n/g, '\n')
+                privateKey: formattedKey
             })
         });
         console.log('Firebase Admin SDK initialized successfully.');

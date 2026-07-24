@@ -69,7 +69,7 @@ app.use('/api/vision', visionRoutes);
 
 const frontendRoot = path.join(__dirname, '../');
 const publicAssets = new Set([
-    'styles.css', 'eRevive.png', 'eRevive (1).png', 'google.jpeg', 'reward.jpg', 'R.jpeg',
+    'config.js', 'styles.css', 'eRevive.png', 'eRevive (1).png', 'google.jpeg', 'reward.jpg', 'R.jpeg',
     'JD-08-1024.webp', 'background.jpg', '1000_F_471605919_A9olxL3r0Iky3LDiEO8qgRf5yvHNawoR.jpg',
     '3d-abstract-gift-box-with-gold-confetti-white-background-3d-rendering-abstract-background_457716-1484.avif',
     'bright-green-recycling-symbol-green_476363-6263.avif',

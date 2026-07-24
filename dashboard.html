@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <!-- Global CSS for fonts and custom styles -->
     <link rel="stylesheet" href="styles.css">
+    <!-- Centralized API Base URL Configuration -->
+    <script src="config.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -1098,13 +1100,10 @@
 
     <!-- Consolidated Application Logic Script -->
     <script>
-        // Dynamic API Base URL setup (supports local dev, Render, Vercel cross-origin)
-        const API_BASE_URL = window.API_BASE_URL || localStorage.getItem('API_BASE_URL') || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : '');
-
         // Check authentication state
         let token = null;
         const initializeFirebase = async () => {
-            const response = await fetch(`${API_BASE_URL}/api/config/firebase`);
+            const response = await fetch(`${window.API_BASE_URL}/api/config/firebase`);
             const result = await response.json();
             if (!result.success) throw new Error(result.message);
             if (!firebase.apps.length) firebase.initializeApp(result.data);
@@ -1155,7 +1154,7 @@
         // Load dashboard live statistics from backend
         async function loadDashboardData() {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/user/profile`, {
+                const response = await fetch(`${window.API_BASE_URL}/api/user/profile`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const result = await response.json();
@@ -1324,7 +1323,7 @@
 
         async function markAllNotificationsRead() {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/notifications/read`, {
+                const res = await fetch(`${window.API_BASE_URL}/api/notifications/read`, {
                     method: 'PUT',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -1339,7 +1338,7 @@
 
         async function loadRewardsCatalog() {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/rewards`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const response = await fetch(`${window.API_BASE_URL}/api/rewards`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const result = await response.json();
                 if (result.success) rewardsByName = Object.fromEntries(result.data.map(reward => [reward.name, reward]));
             } catch (e) {
@@ -1423,7 +1422,7 @@
         // Log out clearing action
         async function handleLogout() {
             try {
-                await fetch(`${API_BASE_URL}/api/auth/logout`, {
+                await fetch(`${window.API_BASE_URL}/api/auth/logout`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -1675,7 +1674,7 @@
             if (confirmBtn) confirmBtn.disabled = true;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/vision/analyze`, {
+                const response = await fetch(`${window.API_BASE_URL}/api/vision/analyze`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1968,7 +1967,7 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/sell/request`, {
+                const response = await fetch(`${window.API_BASE_URL}/api/sell/request`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2140,7 +2139,7 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/recycle/request`, {
+                const response = await fetch(`${window.API_BASE_URL}/api/recycle/request`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2269,7 +2268,7 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/donate/request`, {
+                const response = await fetch(`${window.API_BASE_URL}/api/donate/request`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2472,7 +2471,7 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/rewards/redeem`, {
+                const response = await fetch(`${window.API_BASE_URL}/api/rewards/redeem`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
