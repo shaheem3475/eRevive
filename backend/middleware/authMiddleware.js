@@ -46,8 +46,9 @@ const verifyJWT = async (req, res, next) => {
 };
 
 const verifyAdmin = (req, res, next) => {
-    if (req.user.role !== 'Admin') {
-        return res.status(403).json({ success: false, message: 'Admin access required', errors: [] });
+    const role = (req.user && req.user.role) ? String(req.user.role).toLowerCase() : '';
+    if (role !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Forbidden: Admin access required', errors: [] });
     }
     next();
 };

@@ -15,6 +15,7 @@ const donateRoutes = require('./routes/donateRoutes');
 const rewardsRoutes = require('./routes/rewardsRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const visionRoutes = require('./routes/visionRoutes');
 
 // Initialize database
 connectDB();
@@ -53,6 +54,7 @@ app.use('/api/donate', donateRoutes);
 app.use('/api/rewards', rewardsRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/vision', visionRoutes);
 
 const frontendRoot = path.join(__dirname, '../');
 const publicAssets = new Set([
@@ -67,6 +69,7 @@ const publicAssets = new Set([
 
 app.get(['/', '/index.html'], (req, res) => res.sendFile(path.join(frontendRoot, 'index.html')));
 app.get('/dashboard.html', (req, res) => res.sendFile(path.join(frontendRoot, 'dashboard.html')));
+app.get('/admin.html', (req, res) => res.sendFile(path.join(frontendRoot, 'admin.html')));
 app.get('/:asset', (req, res, next) => {
     if (!publicAssets.has(req.params.asset)) return next();
     res.sendFile(path.join(frontendRoot, req.params.asset));

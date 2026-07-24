@@ -386,13 +386,18 @@
                     <!-- Assessor Panel Left -->
                     <div class="lg:col-span-7 space-y-6">
                         <div class="glass-card p-6 rounded-[2rem] border border-slate-200/50 dark:border-slate-800/40 space-y-6">
-                            <h3 class="font-extrabold text-slate-900 dark:text-white text-base">Evaluate Device Condition</h3>
+                            <h3 class="font-extrabold text-slate-900 dark:text-white text-base flex items-center justify-between">
+                                <span>Evaluate Device Condition</span>
+                                <span class="text-[10px] bg-primary-100 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Gemini AI Vision
+                                </span>
+                            </h3>
                             
                             <!-- Scanner action switches -->
                             <div class="grid grid-cols-2 gap-4">
                                 <button onclick="simulateScan()" class="py-4 bg-slate-100 hover:bg-slate-200/60 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/50 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 rounded-2xl font-bold text-xs flex flex-col items-center justify-center space-y-2 transition-all">
                                     <i class="fa-solid fa-qrcode text-primary-500 text-xl"></i>
-                                    <span>Simulate Scan</span>
+                                    <span>Simulate AI Scan</span>
                                 </button>
                                 <button onclick="triggerFileUpload()" class="py-4 bg-slate-100 hover:bg-slate-200/60 dark:bg-slate-900 dark:hover:bg-slate-800/80 border border-slate-200/50 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 rounded-2xl font-bold text-xs flex flex-col items-center justify-center space-y-2 transition-all">
                                     <i class="fa-solid fa-cloud-arrow-up text-accent text-xl"></i>
@@ -401,8 +406,65 @@
                                 <input type="file" id="sell-fileInput" class="hidden" accept="image/*" onchange="handleImageUpload(event)" />
                             </div>
 
+                            <!-- Auto-Filled Editable Specifications -->
+                            <div class="space-y-4 pt-2 border-t border-slate-200/50 dark:border-slate-800/40">
+                                <h4 class="font-bold text-slate-900 dark:text-white text-xs flex items-center justify-between">
+                                    <span><i class="fa-solid fa-microchip text-primary-500 mr-1.5"></i> Device Specifications</span>
+                                    <span class="text-[9px] text-slate-400 font-normal">Auto-filled by AI • Editable</span>
+                                </h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1" for="sell-device-name-input">
+                                            Device Name
+                                        </label>
+                                        <input id="sell-device-name-input" type="text" placeholder="Upload image or scan device to auto-fill..." class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-800/60 rounded-xl text-xs focus:outline-none glass-input font-bold text-slate-800 dark:text-white" oninput="handleDeviceNameChange(event)" />
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1" for="sell-device-category">
+                                                Category
+                                            </label>
+                                            <select id="sell-device-category" onchange="recalculatePrice()" class="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-800/60 bg-white dark:bg-slate-900 rounded-xl text-xs focus:outline-none glass-input font-semibold text-slate-800 dark:text-slate-200">
+                                                <option value="Smartphone">Smartphone</option>
+                                                <option value="Laptop">Laptop</option>
+                                                <option value="Tablet">Tablet</option>
+                                                <option value="Audio">Audio</option>
+                                                <option value="Smartwatch">Smartwatch</option>
+                                                <option value="Monitor">Monitor</option>
+                                                <option value="Printer">Printer</option>
+                                                <option value="Headphones">Headphones</option>
+                                                <option value="Desktop">Desktop</option>
+                                                <option value="Camera">Camera</option>
+                                                <option value="Gaming Console">Gaming Console</option>
+                                                <option value="Router">Router</option>
+                                                <option value="Keyboard">Keyboard</option>
+                                                <option value="Mouse">Mouse</option>
+                                                <option value="Speakers">Speakers</option>
+                                                <option value="Television">Television</option>
+                                                <option value="Accessory">Accessory</option>
+                                                <option value="Component">Component</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1" for="sell-device-condition">
+                                                Estimated Condition
+                                            </label>
+                                            <select id="sell-device-condition" onchange="recalculatePrice()" class="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-800/60 bg-white dark:bg-slate-900 rounded-xl text-xs focus:outline-none glass-input font-semibold text-slate-800 dark:text-slate-200">
+                                                <option value="Like New">Like New</option>
+                                                <option value="Excellent">Excellent</option>
+                                                <option value="Good">Good</option>
+                                                <option value="Fair">Fair</option>
+                                                <option value="Poor">Poor</option>
+                                                <option value="Broken">Broken</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Defects Checklist -->
-                            <div class="space-y-4 pt-2">
+                            <div class="space-y-4 pt-2 border-t border-slate-200/50 dark:border-slate-800/40">
                                 <h4 class="font-bold text-slate-900 dark:text-white text-xs">Wear Defect Checklist</h4>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                                     <label class="flex items-center space-x-2.5 p-3 bg-white dark:bg-slate-900/60 rounded-xl border border-slate-200/50 dark:border-slate-800/80 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
@@ -442,10 +504,13 @@
                         </div>
                     </div>
 
-                    <!-- Scanner Simulation View Right -->
-                    <div class="lg:col-span-5 flex flex-col items-center">
+                    <!-- Scanner Inspection & AI Vision Results View Right -->
+                    <div class="lg:col-span-5 flex flex-col items-center space-y-4">
                         <div class="w-full max-w-sm glass-card rounded-[2rem] border border-slate-200/50 dark:border-slate-800/40 p-5 flex flex-col items-center text-center space-y-4 shadow-xl">
-                            <span class="text-[10px] font-bold text-primary-500 uppercase tracking-widest bg-primary-100 dark:bg-primary-950/40 px-3 py-1 rounded-full">SaaS Inspection View</span>
+                            <div class="w-full flex justify-between items-center">
+                                <span class="text-[10px] font-bold text-primary-500 uppercase tracking-widest bg-primary-100 dark:bg-primary-950/40 px-3 py-1 rounded-full">AI Inspection View</span>
+                                <span id="scan-status-badge" class="text-[9px] font-bold text-slate-400">Standby</span>
+                            </div>
                             
                             <div class="w-full aspect-square bg-slate-950 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden scan-container border border-slate-800">
                                 <div id="scan-bar" class="hidden scan-line"></div>
@@ -459,24 +524,75 @@
                                 <div id="scan-skeleton" class="hidden absolute inset-0 bg-slate-900/90 dark:bg-slate-950/90 flex flex-col p-6 space-y-4 z-20">
                                     <div class="skeleton w-3/4 h-5 rounded-lg"></div>
                                     <div class="skeleton w-1/2 h-4 rounded-lg"></div>
-                                    <div class="flex-grow flex items-center justify-center">
+                                    <div class="flex-grow flex items-center justify-center flex-col space-y-3">
                                         <div class="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                                        <i class="fa-solid fa-wand-magic-sparkles text-primary-400 animate-pulse text-lg"></i>
                                     </div>
-                                    <p class="text-xs font-semibold text-slate-400 animate-pulse text-center">Inspecting device hardware matrices...</p>
+                                    <p class="text-xs font-semibold text-slate-300 animate-pulse text-center">Analyzing image with Google Gemini Vision API...</p>
                                 </div>
 
                                 <div id="scan-placeholder" class="text-slate-500 space-y-3 z-10 p-6 flex flex-col items-center">
                                     <i class="fa-solid fa-camera text-4xl text-slate-700 animate-pulse"></i>
                                     <p class="text-xs font-extrabold text-slate-400">Scanner Standby</p>
-                                    <p class="text-[10px] text-slate-500 leading-relaxed">Initiate scan or upload an image to identify hardware specifications.</p>
+                                    <p class="text-[10px] text-slate-500 leading-relaxed">Initiate scan or upload an image to identify device via Gemini Vision.</p>
                                 </div>
 
                                 <img id="scan-img-preview" class="hidden absolute inset-0 w-full h-full object-cover z-0" src="" alt="Device preview"/>
                             </div>
 
+                            <!-- Error Banner Alert -->
+                            <div id="scan-error-banner" class="hidden w-full p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 rounded-xl text-left flex items-start space-x-2.5">
+                                <i class="fa-solid fa-triangle-exclamation text-rose-500 text-xs mt-0.5 shrink-0"></i>
+                                <div class="text-[11px] text-rose-700 dark:text-rose-300 leading-snug font-medium" id="scan-error-msg">
+                                    No electronic device detected. Please try uploading a clearer image.
+                                </div>
+                            </div>
+
                             <div class="w-full bg-slate-100/50 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-200/50 dark:border-slate-800/40 flex flex-col items-center justify-center space-y-1">
                                 <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Identified hardware model</span>
                                 <span class="font-extrabold text-slate-800 dark:text-slate-200 text-xs" id="detected-device-name">None</span>
+                            </div>
+                        </div>
+
+                        <!-- Premium Animated AI Result Card -->
+                        <div id="ai-vision-card" class="hidden w-full max-w-sm ai-glow-card rounded-[2rem] p-5 space-y-3 text-left">
+                            <div class="flex items-center justify-between border-b border-primary-500/20 pb-2.5">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-primary-500 text-sm"></i>
+                                    <span class="font-extrabold text-xs text-slate-900 dark:text-white">AI Vision Analysis</span>
+                                </div>
+                                <span id="ai-card-confidence" class="ai-pulse-badge bg-primary-500 text-white font-extrabold text-[10px] px-2.5 py-0.5 rounded-full">
+                                    97%
+                                </span>
+                            </div>
+
+                            <div class="space-y-2">
+                                <div>
+                                    <span class="text-[9px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider">Device Name</span>
+                                    <h4 id="ai-card-name" class="font-extrabold text-sm text-slate-800 dark:text-white truncate">Apple iPhone 11 Pro</h4>
+                                </div>
+
+                                <div class="grid grid-cols-3 gap-2 pt-1">
+                                    <div class="bg-white/80 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200/40 dark:border-slate-800/40">
+                                        <span class="block text-[8px] text-slate-400 uppercase font-bold">Brand</span>
+                                        <span id="ai-card-brand" class="font-bold text-xs text-slate-700 dark:text-slate-200 truncate block">Apple</span>
+                                    </div>
+                                    <div class="bg-white/80 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200/40 dark:border-slate-800/40">
+                                        <span class="block text-[8px] text-slate-400 uppercase font-bold">Category</span>
+                                        <span id="ai-card-category" class="font-bold text-xs text-slate-700 dark:text-slate-200 truncate block">Smartphone</span>
+                                    </div>
+                                    <div class="bg-white/80 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200/40 dark:border-slate-800/40">
+                                        <span class="block text-[8px] text-slate-400 uppercase font-bold">Condition</span>
+                                        <span id="ai-card-condition" class="font-bold text-xs text-emerald-600 dark:text-emerald-400 truncate block">Good</span>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white/60 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-200/40 dark:border-slate-800/40 mt-2">
+                                    <span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Visual Observation</span>
+                                    <p id="ai-card-reason" class="text-[11px] text-slate-600 dark:text-slate-300 italic leading-relaxed">
+                                        "Minor cosmetic scratches visible. Display appears intact."
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1441,82 +1557,225 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            // Derive a clean device name from the uploaded filename (strip extension)
-            const rawName = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
-            const uploadedDeviceName = rawName || 'Uploaded Device';
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 const imgPreview = document.getElementById("scan-img-preview");
                 imgPreview.src = e.target.result;
                 imgPreview.classList.remove("hidden");
                 document.getElementById("scan-placeholder").classList.add("hidden");
-                // Pass the actual filename-derived name instead of a random mock device
-                runScanSweepAnimation(uploadedDeviceName, null);
+
+                runGeminiVisionScan(e.target.result, file.type || 'image/jpeg');
             };
             reader.readAsDataURL(file);
         }
 
-        function simulateScan() {
+        async function simulateScan() {
             const imgPreview = document.getElementById("scan-img-preview");
-            imgPreview.src = "WhatsApp Image 2025-02-27 at 21.25.54_d5959db5.jpg";
+            const sampleUrl = "WhatsApp Image 2025-02-27 at 21.25.54_d5959db5.jpg";
+            imgPreview.src = sampleUrl;
             imgPreview.classList.remove("hidden");
             document.getElementById("scan-placeholder").classList.add("hidden");
-            // Simulation uses random mock device (intentional demo behavior)
-            runScanSweepAnimation(null, null);
+
+            try {
+                const resp = await fetch(sampleUrl);
+                const blob = await resp.blob();
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    runGeminiVisionScan(reader.result, blob.type || 'image/jpeg');
+                };
+                reader.readAsDataURL(blob);
+            } catch (e) {
+                console.error("Failed to load sample image for simulation:", e);
+                showScanError("Failed to process simulation image asset.");
+            }
         }
 
-        function runScanSweepAnimation(overrideName, overridePrice) {
+        async function runGeminiVisionScan(base64Data, mimeType = 'image/jpeg') {
             const scanBar = document.getElementById("scan-bar");
-            const loading = document.getElementById("scan-skeleton"); // Shows skeleton
+            const loading = document.getElementById("scan-skeleton");
+            const errorBanner = document.getElementById("scan-error-banner");
+            const aiCard = document.getElementById("ai-vision-card");
             const deviceField = document.getElementById("detected-device-name");
             const confirmBtn = document.getElementById("confirm-btn");
+            const badge = document.getElementById("scan-status-badge");
 
-            scanBar.classList.remove("hidden");
-            loading.classList.remove("hidden"); // Enable loading skeleton
-            confirmBtn.disabled = true;
-
-            setTimeout(() => {
-                scanBar.classList.add("hidden");
-                loading.classList.add("hidden"); // Disable skeleton
-
-                if (overrideName) {
-                    // Use the provided name (from uploaded file) instead of random mock
-                    sellDeviceName = overrideName;
-                    sellBasePrice = overridePrice || 150; // Safe default base price
-                } else {
-                    // Simulation mode: pick a random mock device
-                    const device = mockDevices[Math.floor(Math.random() * mockDevices.length)];
-                    sellDeviceName = device.name;
-                    sellBasePrice = device.price;
-                }
-
-                deviceField.textContent = sellDeviceName;
-                deviceField.className = "font-bold text-emerald-500 dark:text-emerald-400 text-xs";
-                
-                recalculatePrice();
-            }, 2000);
-        }
-
-        function recalculatePrice() {
-            if (!sellBasePrice) return;
-
-            let price = sellBasePrice;
-            if (document.getElementById("defect-scratch").checked) price -= 10;
-            if (document.getElementById("defect-dent").checked) price -= 20;
-            if (document.getElementById("defect-battery").checked) price -= 15;
-            if (document.getElementById("defect-camera").checked) price -= 25;
-
-            const customDefect = document.getElementById("custom-defect").value.trim().toLowerCase();
-            if (customDefect.length > 0) {
-                price -= 30;
+            if (errorBanner) errorBanner.classList.add("hidden");
+            if (aiCard) aiCard.classList.add("hidden");
+            if (badge) {
+                badge.textContent = "Analyzing...";
+                badge.className = "text-[9px] font-bold text-amber-500 animate-pulse";
             }
 
-            if (price < 10) price = 10;
-            sellFinalPrice = price;
+            scanBar.classList.remove("hidden");
+            loading.classList.remove("hidden");
+            if (confirmBtn) confirmBtn.disabled = true;
+
+            try {
+                const response = await fetch('http://localhost:5000/api/vision/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        image: base64Data,
+                        mimeType: mimeType
+                    })
+                });
+
+                const result = await response.json();
+
+                scanBar.classList.add("hidden");
+                loading.classList.add("hidden");
+
+                if (result.success && result.data && result.data.confidence > 0 && result.data.deviceName !== "Unknown Device") {
+                    const data = result.data;
+                    sellDeviceName = data.deviceName;
+                    sellBasePrice = 150; // Evaluation baseline
+
+                    // Auto-fill form input fields
+                    const nameInput = document.getElementById("sell-device-name-input");
+                    const catSelect = document.getElementById("sell-device-category");
+                    const condSelect = document.getElementById("sell-device-condition");
+
+                    if (nameInput) nameInput.value = data.deviceName;
+                    if (catSelect) {
+                        const opt = Array.from(catSelect.options).find(o => o.value.toLowerCase() === data.category.toLowerCase());
+                        if (opt) catSelect.value = opt.value; else catSelect.value = "Other";
+                    }
+                    if (condSelect) {
+                        const opt = Array.from(condSelect.options).find(o => o.value.toLowerCase() === data.condition.toLowerCase());
+                        if (opt) condSelect.value = opt.value; else condSelect.value = "Fair";
+                    }
+
+                    // Populate AI Card
+                    document.getElementById("ai-card-name").textContent = data.deviceName;
+                    document.getElementById("ai-card-brand").textContent = data.brand;
+                    document.getElementById("ai-card-category").textContent = data.category;
+                    document.getElementById("ai-card-condition").textContent = data.condition;
+                    document.getElementById("ai-card-confidence").textContent = `${data.confidence}%`;
+                    document.getElementById("ai-card-reason").textContent = `"${data.reason}"`;
+
+                    if (aiCard) {
+                        aiCard.classList.remove("hidden");
+                        aiCard.classList.add("animate-fade-in");
+                    }
+
+                    if (deviceField) {
+                        deviceField.textContent = data.deviceName;
+                        deviceField.className = "font-bold text-emerald-500 dark:text-emerald-400 text-xs";
+                    }
+
+                    if (badge) {
+                        badge.textContent = `Verified (${data.confidence}%)`;
+                        badge.className = "text-[9px] font-bold text-emerald-500";
+                    }
+
+                    recalculatePrice();
+                } else {
+                    const errorMsg = result.message || (result.data ? result.data.reason : 'No electronic device detected.');
+                    showScanError(errorMsg);
+                    if (badge) {
+                        badge.textContent = "Analysis Failed";
+                        badge.className = "text-[9px] font-bold text-rose-500";
+                    }
+                }
+            } catch (err) {
+                console.error("Gemini Vision API error:", err);
+                scanBar.classList.add("hidden");
+                loading.classList.add("hidden");
+                showScanError("Network failure or server error contacting Gemini Vision.");
+                if (badge) {
+                    badge.textContent = "Error";
+                    badge.className = "text-[9px] font-bold text-rose-500";
+                }
+            }
+        }
+
+        function showScanError(msg) {
+            const errorBanner = document.getElementById("scan-error-banner");
+            const errorMsgText = document.getElementById("scan-error-msg");
+            if (errorBanner && errorMsgText) {
+                errorMsgText.textContent = msg;
+                errorBanner.classList.remove("hidden");
+            }
+        }
+
+        function handleDeviceNameChange(e) {
+            sellDeviceName = e.target.value.trim() || "Custom Device";
+            const deviceField = document.getElementById("detected-device-name");
+            if (deviceField) {
+                deviceField.textContent = sellDeviceName;
+            }
+            recalculatePrice();
+        }
+
+        const CATEGORY_BASE_PRICES = {
+            'Smartphone': 50000,
+            'Laptop': 65000,
+            'Tablet': 30000,
+            'Smartwatch': 15000,
+            'Monitor': 18000,
+            'Printer': 12000,
+            'Headphones': 8000,
+            'Desktop': 45000,
+            'Camera': 35000,
+            'Gaming Console': 30000,
+            'Router': 5000,
+            'Keyboard': 3000,
+            'Mouse': 2500,
+            'Speakers': 6000,
+            'Television': 40000,
+            'Accessory': 5000,
+            'Component': 10000,
+            'Illustration': 5000,
+            'Unknown Electronics': 10000
+        };
+
+        const CONDITION_MULTIPLIERS = {
+            'Like New': 0.95,
+            'Excellent': 0.90,
+            'Good': 0.80,
+            'Fair': 0.65,
+            'Poor': 0.45,
+            'Broken': 0.25,
+            'Unknown': 0.60,
+            'Not Applicable': 0.50
+        };
+
+        const DEFECT_DEDUCTIONS = {
+            Scratch: 500,
+            Dent: 1000,
+            Battery: 750,
+            Camera: 1250
+        };
+
+        function recalculatePrice() {
+            const categorySelect = document.getElementById("sell-device-category");
+            const conditionSelect = document.getElementById("sell-device-condition");
+            const selectedCategory = categorySelect ? categorySelect.value : "Smartphone";
+            const selectedCondition = conditionSelect ? conditionSelect.value : "Good";
+
+            const basePrice = CATEGORY_BASE_PRICES[selectedCategory] || 10000;
+            const multiplier = CONDITION_MULTIPLIERS[selectedCondition] !== undefined ? CONDITION_MULTIPLIERS[selectedCondition] : 0.80;
+            const priceAfterCondition = Math.round(basePrice * multiplier);
+
+            let totalDeductions = 0;
+            if (document.getElementById("defect-scratch").checked) totalDeductions += DEFECT_DEDUCTIONS.Scratch;
+            if (document.getElementById("defect-dent").checked) totalDeductions += DEFECT_DEDUCTIONS.Dent;
+            if (document.getElementById("defect-battery").checked) totalDeductions += DEFECT_DEDUCTIONS.Battery;
+            if (document.getElementById("defect-camera").checked) totalDeductions += DEFECT_DEDUCTIONS.Camera;
+
+            const customDefect = document.getElementById("custom-defect").value.trim();
+            if (customDefect.length > 0) {
+                totalDeductions += 1500;
+            }
+
+            sellBasePrice = basePrice;
+            sellFinalPrice = Math.max(500, priceAfterCondition - totalDeductions);
 
             // Animate price numbers
-            animatePrice(price);
+            animatePrice(sellFinalPrice);
 
             document.getElementById("confirm-btn").disabled = false;
         }
@@ -1534,11 +1793,11 @@
                 start += increment;
                 if (start >= target) {
                     clearInterval(timer);
-                    priceOut.textContent = `$${Math.round(target)}`;
-                    bonusOut.textContent = `+${Math.round(target / 2)} Eco Points reward`;
+                    priceOut.textContent = `₹${Math.round(target).toLocaleString('en-IN')}`;
+                    bonusOut.textContent = `+${Math.round(target / 100)} Eco Points reward`;
                 } else {
-                    priceOut.textContent = `$${Math.round(start)}`;
-                    bonusOut.textContent = `+${Math.round(start / 2)} Eco Points reward`;
+                    priceOut.textContent = `₹${Math.round(start).toLocaleString('en-IN')}`;
+                    bonusOut.textContent = `+${Math.round(start / 100)} Eco Points reward`;
                 }
             }, stepTime);
         }
@@ -1553,6 +1812,9 @@
             if (document.getElementById("defect-battery").checked) defects.push("Battery");
             if (document.getElementById("defect-camera").checked) defects.push("Camera");
             const customDefects = document.getElementById("custom-defect").value.trim();
+            const category = document.getElementById("sell-device-category")?.value || "Smartphone";
+            const condition = document.getElementById("sell-device-condition")?.value || "Good";
+            const brand = document.getElementById("ai-card-brand")?.textContent || "Generic";
 
             try {
                 const response = await fetch('http://localhost:5000/api/sell/request', {
@@ -1562,7 +1824,10 @@
                         'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({
-                        deviceName: sellDeviceName,
+                        deviceName: sellDeviceName || "Electronic Device",
+                        brand,
+                        category,
+                        condition,
                         defects,
                         customDefects
                     })
@@ -1600,6 +1865,17 @@
             document.getElementById("scan-img-preview").classList.add("hidden");
             document.getElementById("scan-img-preview").src = "";
             document.getElementById("scan-placeholder").classList.remove("hidden");
+            const nameInput = document.getElementById("sell-device-name-input");
+            if (nameInput) nameInput.value = "";
+            const errorBanner = document.getElementById("scan-error-banner");
+            if (errorBanner) errorBanner.classList.add("hidden");
+            const aiCard = document.getElementById("ai-vision-card");
+            if (aiCard) aiCard.classList.add("hidden");
+            const badge = document.getElementById("scan-status-badge");
+            if (badge) {
+                badge.textContent = "Standby";
+                badge.className = "text-[9px] font-bold text-slate-400";
+            }
             document.getElementById("defect-scratch").checked = false;
             document.getElementById("defect-dent").checked = false;
             document.getElementById("defect-battery").checked = false;

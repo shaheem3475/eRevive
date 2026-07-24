@@ -225,3 +225,31 @@ body {
 .timeline-item-last .timeline-dot::after {
     display: none;
 }
+
+/* AI Vision Engine Premium Card Styles */
+.ai-glow-card {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(14, 165, 233, 0.08) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    box-shadow: 0 8px 32px 0 rgba(34, 197, 94, 0.12);
+    position: relative;
+    overflow: hidden;
+}
+
+.dark .ai-glow-card {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(15, 23, 42, 0.8) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+}
+
+.ai-pulse-badge {
+    animation: badgePulse 2s infinite ease-in-out;
+}
+
+@keyframes badgePulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+    }
+}

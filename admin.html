@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eRevive Admin Management Console | E-Waste Platform</title>
+    
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#16a34a',
+                            600: '#15803d',
+                            700: '#15803d',
+                            900: '#14532d',
+                            950: '#052e16',
+                        },
+                        slate: {
+                            850: '#111827',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .hover-lift {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <!-- Chart.js for analytics charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col md:flex-row antialiased selection:bg-primary-500 selection:text-white">
+
+    <!-- Access Denied Modal Overlay -->
+    <div id="access-denied-overlay" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full p-8 rounded-[2rem] border border-red-500/30 text-center space-y-5 shadow-2xl">
+            <div class="w-16 h-16 rounded-full bg-red-950/50 text-red-500 border border-red-500/40 flex items-center justify-center mx-auto text-3xl">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-xl font-black text-white font-outfit">403 Forbidden: Access Denied</h3>
+                <p class="text-xs text-slate-400 leading-relaxed" id="denied-reason-text">You do not have administrator permissions to view this system. Redirecting...</p>
+            </div>
+            <button onclick="handleLogout()" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors">
+                Return to Login
+            </button>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal Dialog -->
+    <div id="confirm-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-card max-w-sm w-full p-6 rounded-2xl border border-slate-800 text-center space-y-4 shadow-2xl">
+            <div class="w-12 h-12 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-circle-exclamation"></i>
+            </div>
+            <h3 class="font-bold text-white text-sm" id="confirm-modal-title">Confirm Status Change</h3>
+            <p class="text-xs text-slate-400" id="confirm-modal-message">Are you sure you want to execute this action?</p>
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <button onclick="closeConfirmModal()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs">Cancel</button>
+                <button id="confirm-modal-proceed-btn" class="py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl text-xs">Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop Sidebar Navigation -->
+    <aside id="sidebar" class="hidden md:flex flex-col w-64 bg-slate-900 border-r border-slate-800/80 p-5 shrink-0 transition-all duration-300 select-none">
+        <div class="flex items-center space-x-3 pb-6 border-b border-slate-800/80">
+            <img src="eRevive (1).png" alt="eRevive Logo" class="h-8 w-auto brightness-200" id="sidebar-logo"/>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-primary-500/20 text-primary-400 border border-primary-500/30 uppercase tracking-widest">Admin Console</span>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-grow my-6 space-y-1.5 overflow-y-auto">
+            <button onclick="switchAdminTab('dashboard')" id="nav-dashboard" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-bold bg-primary-500 text-white shadow-lg shadow-primary-500/15 transition-all">
+                <i class="fa-solid fa-chart-pie text-sm"></i>
+                <span>Dashboard</span>
+            </button>
+            <button onclick="switchAdminTab('users')" id="nav-users" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                <i class="fa-solid fa-users text-sm"></i>
+                <span>Users</span>
+            </button>
+            <button onclick="switchAdminTab('donations')" id="nav-donations" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                <i class="fa-solid fa-hands-holding-child text-sm"></i>
+                <span>Donations</span>
+            </button>
+            <button onclick="switchAdminTab('sell')" id="nav-sell" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                <i class="fa-solid fa-hand-holding-dollar text-sm"></i>
+                <span>Sell Devices</span>
+            </button>
+            <button onclick="switchAdminTab('recycle')" id="nav-recycle" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                <i class="fa-solid fa-recycle text-sm"></i>
+                <span>Recycle Requests</span>
+            </button>
+            <button onclick="switchAdminTab('analytics')" id="nav-analytics" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                <i class="fa-solid fa-chart-line text-sm"></i>
+                <span>Analytics</span>
+            </button>
+        </nav>
+
+        <!-- Admin Profile & Log Out Bottom Actions -->
+        <div class="border-t border-slate-800/80 pt-5 space-y-4">
+            <div class="flex items-center space-x-3 bg-slate-800/40 border border-slate-700/10 rounded-2xl p-3 shrink-0">
+                <div class="bg-primary-500 text-white rounded-xl w-8 h-8 flex items-center justify-center font-bold text-xs shrink-0 shadow-md">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <div class="min-w-0 sidebar-text">
+                    <div class="text-[9px] text-primary-400 uppercase tracking-widest font-extrabold">System Admin</div>
+                    <div class="text-xs font-bold text-white truncate" id="admin-name">Admin User</div>
+                </div>
+            </div>
+            <button onclick="handleLogout()" class="w-full py-2.5 bg-red-950/20 hover:bg-red-900/30 text-red-400 border border-red-900/10 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-2 transition-colors">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Log Out</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow flex flex-col min-w-0 md:h-screen md:overflow-y-auto px-4 md:px-8 py-6 relative z-10">
+        
+        <!-- Top Header & Search Toolbar -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 shrink-0 select-none border-b border-slate-800/60 pb-5">
+            <div>
+                <h1 class="text-2xl font-black text-white font-outfit" id="admin-tab-title">Admin Management System</h1>
+                <p class="text-xs text-slate-400 mt-0.5 font-medium">Real-time control panel for eRevive platform operations.</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <div class="relative flex-grow md:w-64">
+                    <input type="text" id="global-search-input" oninput="applyFiltersAndSearch()" placeholder="Search user, product, email..." class="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-primary-500"/>
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                </div>
+                <select id="filter-status" onchange="applyFiltersAndSearch()" class="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300 focus:outline-none">
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Collected">Collected</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+                <button onclick="loadAllAdminModules()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-colors">
+                    <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab contents Panels -->
+        <div class="flex-grow flex flex-col justify-start">
+            
+            <!-- PANEL 1: DASHBOARD STATS -->
+            <section id="admin-panel-dashboard" class="admin-panel space-y-8">
+                <!-- 8 Live Statistics Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div class="glass-card p-6 rounded-2xl border border-slate-800/60 shadow-lg flex flex-col justify-between hover-lift">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Users</span>
+                            <span class="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-sm border border-blue-500/20"><i class="fa-solid fa-users"></i></span>
+                        </div>
+                        <div class="mt-4">
+                            <div class="text-3xl font-black text-white" id="stat-total-users">0</div>
+                            <div class="text-[10px] text-slate-500 font-semibold mt-1">Registered Accounts</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-2xl border border-slate-800/60 shadow-lg flex flex-col justify-between hover-lift">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Donations</span>
+                            <span class="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-sm border border-indigo-500/20"><i class="fa-solid fa-hands-holding-child"></i></span>
+                        </div>
+                        <div class="mt-4">
+                            <div class="text-3xl font-black text-white" id="stat-total-donations">0</div>
+                            <div class="text-[10px] text-slate-500 font-semibold mt-1">Device Donations</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-2xl border border-slate-800/60 shadow-lg flex flex-col justify-between hover-lift">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Sell Requests</span>
+                            <span class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm border border-emerald-500/20"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+                        </div>
+                        <div class="mt-4">
+                            <div class="text-3xl font-black text-white" id="stat-total-sell">0</div>
+                            <div class="text-[10px] text-slate-500 font-semibold mt-1">Hardware Assessments</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-2xl border border-slate-800/60 shadow-lg flex flex-col justify-between hover-lift">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Recycles</span>
+                            <span class="w-9 h-9 rounded-xl bg-primary-500/10 text-primary-400 flex items-center justify-center text-sm border border-primary-500/20"><i class="fa-solid fa-recycle"></i></span>
+                        </div>
+                        <div class="mt-4">
+                            <div class="text-3xl font-black text-white" id="stat-total-recycle">0</div>
+                            <div class="text-[10px] text-slate-500 font-semibold mt-1">Recycling Pickups</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-2xl border border-slate-800/60 shadow-lg flex flex-col justify-between hover-lift">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pending Requests</span>
+                            <span class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-sm border border-amber-500/20"><i class="fa-solid fa-hourglass-half"></i></span>
+                        </div>
+                        <div class="mt-4">
+                            <div class="text-3xl font-black text-amber-400" id="stat-pending">0</div>
+                            <div class="text-[10px] text-slate-500 font-semibold mt-1">Awaiting Processing</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-2xl border border-slate-800/60 shadow-lg flex flex-col justify-between hover-lift">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Completed Requests</span>
+                            <span class="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center text-sm border border-teal-500/20"><i class="fa-solid fa-circle-check"></i></span>
+                        </div>
+                        <div class="mt-4">
+                            <div class="text-3xl font-black text-teal-400" id="stat-completed">0</div>
+                            <div class="text-[10px] text-slate-500 font-semibold mt-1">Fulfilled Orders</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-2xl border border-slate-800/60 shadow-lg flex flex-col justify-between hover-lift">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Eco Points Awarded</span>
+                            <span class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-sm border border-purple-500/20"><i class="fa-solid fa-gift"></i></span>
+                        </div>
+                        <div class="mt-4">
+                            <div class="text-3xl font-black text-purple-400" id="stat-points">0</div>
+                            <div class="text-[10px] text-slate-500 font-semibold mt-1">Platform Eco Credits</div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-2xl border border-slate-800/60 shadow-lg flex flex-col justify-between hover-lift">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Today's Requests</span>
+                            <span class="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-sm border border-rose-500/20"><i class="fa-solid fa-calendar-day"></i></span>
+                        </div>
+                        <div class="mt-4">
+                            <div class="text-3xl font-black text-rose-400" id="stat-today">0</div>
+                            <div class="text-[10px] text-slate-500 font-semibold mt-1">Submitted 24h</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL 6: ANALYTICS -->
+            <section id="admin-panel-analytics" class="admin-panel hidden space-y-8">
+
+                <!-- Section 1: Overview Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60">
+                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Today's Requests</div>
+                        <div class="text-2xl font-black text-white" id="ana-daily">–</div>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60">
+                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Weekly Requests</div>
+                        <div class="text-2xl font-black text-indigo-400" id="ana-weekly">–</div>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60">
+                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Monthly Requests</div>
+                        <div class="text-2xl font-black text-primary-400" id="ana-monthly">–</div>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60">
+                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Avg. Daily Activity</div>
+                        <div class="text-2xl font-black text-amber-400" id="ana-avg-daily">–</div>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60">
+                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Completed</div>
+                        <div class="text-2xl font-black text-teal-400" id="ana-completed">–</div>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60">
+                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Pending</div>
+                        <div class="text-2xl font-black text-amber-400" id="ana-pending">–</div>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60">
+                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Rejected</div>
+                        <div class="text-2xl font-black text-red-400" id="ana-rejected">–</div>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60">
+                        <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Total Eco Points</div>
+                        <div class="text-2xl font-black text-purple-400" id="ana-eco-points">–</div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Charts Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60">
+                        <h4 class="font-bold text-white text-xs mb-4">Monthly Donations (Bar)</h4>
+                        <canvas id="chart-donations" height="200"></canvas>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60">
+                        <h4 class="font-bold text-white text-xs mb-4">Monthly Sell Requests (Line)</h4>
+                        <canvas id="chart-sells" height="200"></canvas>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60">
+                        <h4 class="font-bold text-white text-xs mb-4">Monthly Recycle Requests (Line)</h4>
+                        <canvas id="chart-recycles" height="200"></canvas>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60">
+                        <h4 class="font-bold text-white text-xs mb-4">Request Status Distribution (Pie)</h4>
+                        <canvas id="chart-status" height="200"></canvas>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60 lg:col-span-2">
+                        <h4 class="font-bold text-white text-xs mb-4">Eco Points Distribution by Tier (Doughnut)</h4>
+                        <div class="flex justify-center"><canvas id="chart-eco-tier" height="150" style="max-width:420px"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Top Leaderboard + Recent Activity -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass-card rounded-2xl border border-slate-800/60 overflow-hidden">
+                        <div class="p-4 border-b border-slate-800/60">
+                            <h4 class="font-bold text-white text-xs"><i class="fa-solid fa-trophy text-amber-400 mr-2"></i>Top Eco Contributors</h4>
+                        </div>
+                        <div id="leaderboard-list" class="divide-y divide-slate-800/40 text-xs"></div>
+                    </div>
+                    <div class="glass-card rounded-2xl border border-slate-800/60 overflow-hidden">
+                        <div class="p-4 border-b border-slate-800/60">
+                            <h4 class="font-bold text-white text-xs"><i class="fa-solid fa-clock-rotate-left text-blue-400 mr-2"></i>Recent Activity Timeline</h4>
+                        </div>
+                        <div id="activity-timeline" class="p-4 space-y-3 max-h-96 overflow-y-auto text-xs"></div>
+                    </div>
+                </div>
+
+                <!-- Section 4: System Health + Quick Insights -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60 space-y-3">
+                        <h4 class="font-bold text-white text-xs mb-3"><i class="fa-solid fa-server text-primary-400 mr-2"></i>System Health Monitor</h4>
+                        <div id="system-health-body" class="space-y-2 text-xs"></div>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl border border-slate-800/60 space-y-3">
+                        <h4 class="font-bold text-white text-xs mb-3"><i class="fa-solid fa-lightbulb text-amber-400 mr-2"></i>Platform Quick Insights</h4>
+                        <div id="insights-body" class="space-y-2 text-xs"></div>
+                    </div>
+                </div>
+
+                <!-- Section 5: Export Reports -->
+                <div class="glass-card p-5 rounded-2xl border border-slate-800/60">
+                    <h4 class="font-bold text-white text-xs mb-4"><i class="fa-solid fa-file-export text-slate-400 mr-2"></i>Export Reports</h4>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="exportAnalyticsPDF()" class="px-4 py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-600/30 rounded-xl text-xs font-bold transition-colors">
+                            <i class="fa-solid fa-file-pdf mr-1.5"></i>Analytics PDF
+                        </button>
+                        <button onclick="exportCSV('users')" class="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 border border-blue-600/30 rounded-xl text-xs font-bold transition-colors">
+                            <i class="fa-solid fa-file-csv mr-1.5"></i>Users CSV
+                        </button>
+                        <button onclick="exportCSV('donations')" class="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 border border-indigo-600/30 rounded-xl text-xs font-bold transition-colors">
+                            <i class="fa-solid fa-file-csv mr-1.5"></i>Donations CSV
+                        </button>
+                        <button onclick="exportCSV('sell')" class="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 border border-emerald-600/30 rounded-xl text-xs font-bold transition-colors">
+                            <i class="fa-solid fa-file-csv mr-1.5"></i>Sell Requests CSV
+                        </button>
+                        <button onclick="exportCSV('recycle')" class="px-4 py-2 bg-primary-600/20 hover:bg-primary-600/40 text-primary-400 border border-primary-600/30 rounded-xl text-xs font-bold transition-colors">
+                            <i class="fa-solid fa-file-csv mr-1.5"></i>Recycle CSV
+                        </button>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- PANEL 2: USER MANAGEMENT -->
+            <section id="admin-panel-users" class="admin-panel hidden space-y-6">
+                <div class="glass-card rounded-2xl border border-slate-800/60 overflow-hidden shadow-xl">
+                    <div class="p-5 border-b border-slate-800/60 flex flex-wrap justify-between items-center gap-4">
+                        <h3 class="font-extrabold text-white text-sm">User Database Management</h3>
+                        <div class="flex items-center space-x-3 text-xs">
+                            <select id="filter-user-role" onchange="applyFiltersAndSearch()" class="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-slate-300">
+                                <option value="">All Roles</option>
+                                <option value="User">User</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Recycler">Recycler</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-900/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
+                                <tr>
+                                    <th class="p-4">User</th>
+                                    <th class="p-4">Email</th>
+                                    <th class="p-4">Role</th>
+                                    <th class="p-4">Tier</th>
+                                    <th class="p-4">Eco Points</th>
+                                    <th class="p-4">Join Date</th>
+                                    <th class="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="divide-y divide-slate-800/60">
+                                <tr><td colspan="7" class="p-6 text-center text-slate-500">Loading users...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL 3: DONATIONS MANAGEMENT -->
+            <section id="admin-panel-donations" class="admin-panel hidden space-y-6">
+                <div class="glass-card rounded-2xl border border-slate-800/60 overflow-hidden shadow-xl">
+                    <div class="p-5 border-b border-slate-800/60 flex justify-between items-center">
+                        <h3 class="font-extrabold text-white text-sm">Device Donation Approvals</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-900/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
+                                <tr>
+                                    <th class="p-4">Image</th>
+                                    <th class="p-4">Product Details</th>
+                                    <th class="p-4">Donor Name</th>
+                                    <th class="p-4">Phone</th>
+                                    <th class="p-4">Address</th>
+                                    <th class="p-4">Date</th>
+                                    <th class="p-4">Status</th>
+                                    <th class="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="donations-table-body" class="divide-y divide-slate-800/60">
+                                <tr><td colspan="8" class="p-6 text-center text-slate-500">Loading donation requests...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL 4: SELL DEVICES MANAGEMENT -->
+            <section id="admin-panel-sell" class="admin-panel hidden space-y-6">
+                <div class="glass-card rounded-2xl border border-slate-800/60 overflow-hidden shadow-xl">
+                    <div class="p-5 border-b border-slate-800/60 flex justify-between items-center">
+                        <h3 class="font-extrabold text-white text-sm">Sell Evaluations & Buybacks</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-900/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
+                                <tr>
+                                    <th class="p-4">Device</th>
+                                    <th class="p-4">Seller</th>
+                                    <th class="p-4">Condition Defects</th>
+                                    <th class="p-4">Offer Price</th>
+                                    <th class="p-4">Date</th>
+                                    <th class="p-4">Status</th>
+                                    <th class="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sell-table-body" class="divide-y divide-slate-800/60">
+                                <tr><td colspan="7" class="p-6 text-center text-slate-500">Loading sell evaluations...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PANEL 5: RECYCLE REQUESTS MANAGEMENT -->
+            <section id="admin-panel-recycle" class="admin-panel hidden space-y-6">
+                <div class="glass-card rounded-2xl border border-slate-800/60 overflow-hidden shadow-xl">
+                    <div class="p-5 border-b border-slate-800/60 flex justify-between items-center">
+                        <h3 class="font-extrabold text-white text-sm">Certified Recycling Pickups</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-900/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
+                                <tr>
+                                    <th class="p-4">Product</th>
+                                    <th class="p-4">Pickup Type</th>
+                                    <th class="p-4">Coordinates</th>
+                                    <th class="p-4">User</th>
+                                    <th class="p-4">Date</th>
+                                    <th class="p-4">Status</th>
+                                    <th class="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recycle-table-body" class="divide-y divide-slate-800/60">
+                                <tr><td colspan="7" class="p-6 text-center text-slate-500">Loading recycle requests...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- DETAIL MODALS -->
+    <!-- User Detail Modal -->
+    <div id="user-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-card max-w-lg w-full p-6 rounded-2xl border border-slate-800 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-white text-sm" id="user-modal-name">User Profile</h3>
+                <button onclick="closeUserModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-3 text-xs" id="user-modal-body">
+                <p class="text-slate-400">Loading profile details...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sell Price Edit Modal -->
+    <div id="sell-edit-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-card max-w-sm w-full p-6 rounded-2xl border border-slate-800 space-y-4 shadow-2xl">
+            <h3 class="font-bold text-white text-sm">Update Offer Valuation</h3>
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">New Offer Price ($)</label>
+                <input type="number" id="edit-offer-price-input" class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs focus:outline-none focus:border-primary-500"/>
+            </div>
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <button onclick="closeSellEditModal()" class="py-2 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs">Cancel</button>
+                <button id="save-offer-price-btn" class="py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs">Save Offer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN SYSTEM SCRIPT -->
+    <script>
+        let token = "";
+        let firebaseAuthInitialized = false;
+
+        let allUsersData = [];
+        let allDonationsData = [];
+        let allSellData = [];
+        let allRecycleData = [];
+
+        const initializeFirebase = async () => {
+            if (firebaseAuthInitialized) return firebase.auth();
+            const response = await fetch('http://localhost:5000/api/config/firebase');
+            const result = await response.json();
+            if (!result.success) throw new Error(result.message);
+            firebase.initializeApp(result.data);
+            firebaseAuthInitialized = true;
+            return firebase.auth();
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initializeFirebase().then(auth => auth.onAuthStateChanged(async user => {
+                if (!user) {
+                    showAccessDenied("No active session found. Redirecting to login...");
+                    return;
+                }
+
+                token = await user.getIdToken();
+                await loadAllAdminModules();
+            })).catch(error => {
+                console.error('Firebase initialization failed:', error);
+                showAccessDenied("Authentication initialization failed.");
+            });
+        });
+
+        async function loadAllAdminModules() {
+            await Promise.all([
+                loadAdminStats(),
+                loadUsersModule(),
+                loadDonationsModule(),
+                loadSellModule(),
+                loadRecycleModule(),
+                loadAnalyticsModule()
+            ]);
+        }
+
+        // Stats Loader
+        async function loadAdminStats() {
+            try {
+                const response = await fetch('http://localhost:5000/api/admin/stats', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.status === 403) {
+                    showAccessDenied("403 Forbidden: Admin privileges required. Your account does not have admin role.");
+                    return;
+                }
+
+                const result = await response.json();
+                if (result.success) {
+                    const stats = result.data;
+                    document.getElementById("stat-total-users").textContent = stats.totalUsers || 0;
+                    document.getElementById("stat-total-donations").textContent = stats.totalDonations || 0;
+                    document.getElementById("stat-total-sell").textContent = stats.totalSellRequests || 0;
+                    document.getElementById("stat-total-recycle").textContent = stats.totalRecycleRequests || 0;
+                    document.getElementById("stat-pending").textContent = stats.pendingRequests || 0;
+                    document.getElementById("stat-completed").textContent = stats.completedRequests || 0;
+                    document.getElementById("stat-points").textContent = stats.totalEcoPointsAwarded || 0;
+                    document.getElementById("stat-today").textContent = stats.todaysRequests || 0;
+                }
+            } catch (err) {
+                console.error("Error loading admin stats:", err);
+            }
+        }
+
+        // 1. Module Users
+        async function loadUsersModule() {
+            try {
+                const res = await fetch('http://localhost:5000/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } });
+                const result = await res.json();
+                if (result.success) {
+                    allUsersData = result.data || [];
+                    renderUsersTable(allUsersData);
+                }
+            } catch (e) {
+                console.error("Error loading users:", e);
+            }
+        }
+
+        function renderUsersTable(users) {
+            const tbody = document.getElementById("users-table-body");
+            if (!users || users.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">No users found.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = users.map(u => `
+                <tr class="hover:bg-slate-900/50">
+                    <td class="p-4 flex items-center space-x-3 font-bold text-white">
+                        <div class="w-8 h-8 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center text-xs border border-primary-500/30">
+                            ${u.fullName ? u.fullName.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                        <span>${u.fullName}</span>
+                    </td>
+                    <td class="p-4 text-slate-400">${u.email}</td>
+                    <td class="p-4"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'Admin' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-slate-800 text-slate-300'}">${u.role || 'User'}</span></td>
+                    <td class="p-4"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400">${u.currentTier || 'Silver'}</span></td>
+                    <td class="p-4 font-bold text-primary-400">${u.ecoPoints || 0} pts</td>
+                    <td class="p-4 text-slate-400">${new Date(u.createdAt).toLocaleDateString()}</td>
+                    <td class="p-4 text-right space-x-2">
+                        <button onclick="viewUserActivity('${u._id}', '${u.fullName}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-semibold text-[11px]">View History</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function viewUserActivity(userId, name) {
+            document.getElementById("user-modal-name").textContent = `Activity Logs: ${name}`;
+            const body = document.getElementById("user-modal-body");
+            body.innerHTML = `<p class="text-slate-400">Fetching activity history...</p>`;
+            document.getElementById("user-modal").classList.remove("hidden");
+
+            try {
+                const res = await fetch(`http://localhost:5000/api/admin/users/${userId}/activity`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const result = await res.json();
+                if (result.success && result.data.length > 0) {
+                    body.innerHTML = result.data.map(act => `
+                        <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
+                            <div class="flex justify-between font-bold text-white">
+                                <span>${act.action}</span>
+                                <span class="text-[10px] text-slate-500">${new Date(act.createdAt).toLocaleString()}</span>
+                            </div>
+                            <p class="text-slate-400">${act.details}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    body.innerHTML = `<p class="text-slate-400 py-4 text-center">No activity history recorded for this user.</p>`;
+                }
+            } catch (e) {
+                body.innerHTML = `<p class="text-red-400">Failed to load activity logs.</p>`;
+            }
+        }
+
+        function closeUserModal() {
+            document.getElementById("user-modal").classList.add("hidden");
+        }
+
+        // 2. Module Donations
+        async function loadDonationsModule() {
+            try {
+                const res = await fetch('http://localhost:5000/api/admin/donations', { headers: { 'Authorization': `Bearer ${token}` } });
+                const result = await res.json();
+                if (result.success) {
+                    allDonationsData = result.data || [];
+                    renderDonationsTable(allDonationsData);
+                }
+            } catch (e) {
+                console.error("Error loading donations:", e);
+            }
+        }
+
+        function renderDonationsTable(donations) {
+            const tbody = document.getElementById("donations-table-body");
+            if (!donations || donations.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500">No donation requests found.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = donations.map(d => `
+                <tr class="hover:bg-slate-900/50">
+                    <td class="p-4">
+                        <img src="${d.imageUrl}" class="w-10 h-10 object-cover rounded-lg border border-slate-800" alt="Donation"/>
+                    </td>
+                    <td class="p-4 font-bold text-white">${d.productDetails}</td>
+                    <td class="p-4 text-slate-300">${d.user ? d.user.fullName : d.contactName}</td>
+                    <td class="p-4 text-slate-400">${d.phone}</td>
+                    <td class="p-4 text-slate-400 max-w-xs truncate">${d.address}</td>
+                    <td class="p-4 text-slate-400">${new Date(d.createdAt).toLocaleDateString()}</td>
+                    <td class="p-4">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${d.status === 'Approved' || d.status === 'Collected' || d.status === 'Completed' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : d.status === 'Rejected' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">
+                            ${d.status}
+                        </span>
+                    </td>
+                    <td class="p-4 text-right space-x-1.5">
+                        <button onclick="promptStatusUpdate('donation', '${d._id}', 'Approved')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[10px]">Approve</button>
+                        <button onclick="promptStatusUpdate('donation', '${d._id}', 'Collected')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[10px]">Collected</button>
+                        <button onclick="promptStatusUpdate('donation', '${d._id}', 'Rejected')" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-[10px]">Reject</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 3. Module Sell Devices
+        async function loadSellModule() {
+            try {
+                const res = await fetch('http://localhost:5000/api/admin/sell', { headers: { 'Authorization': `Bearer ${token}` } });
+                const result = await res.json();
+                if (result.success) {
+                    allSellData = result.data || [];
+                    renderSellTable(allSellData);
+                }
+            } catch (e) {
+                console.error("Error loading sell requests:", e);
+            }
+        }
+
+        function renderSellTable(sells) {
+            const tbody = document.getElementById("sell-table-body");
+            if (!sells || sells.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">No sell evaluations found.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = sells.map(s => `
+                <tr class="hover:bg-slate-900/50">
+                    <td class="p-4 font-bold text-white">${s.deviceName}</td>
+                    <td class="p-4 text-slate-300">${s.user ? s.user.fullName : 'Seller'}</td>
+                    <td class="p-4 text-slate-400">${(s.defects || []).join(', ') || 'None'} ${s.customDefects ? '(' + s.customDefects + ')' : ''}</td>
+                    <td class="p-4 font-extrabold text-emerald-400">$${s.finalPrice}</td>
+                    <td class="p-4 text-slate-400">${new Date(s.createdAt).toLocaleDateString()}</td>
+                    <td class="p-4">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${s.status === 'Approved' || s.status === 'Paid' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : s.status === 'Rejected' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">
+                            ${s.status}
+                        </span>
+                    </td>
+                    <td class="p-4 text-right space-x-1">
+                        <button onclick="openSellPriceModal('${s._id}', ${s.finalPrice})" class="px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[10px]">Edit Offer</button>
+                        <button onclick="promptStatusUpdate('sell', '${s._id}', 'Approved')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[10px]">Approve</button>
+                        <button onclick="promptStatusUpdate('sell', '${s._id}', 'Rejected')" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-[10px]">Reject</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openSellPriceModal(id, currentPrice) {
+            document.getElementById("edit-offer-price-input").value = currentPrice;
+            const btn = document.getElementById("save-offer-price-btn");
+            btn.onclick = async () => {
+                const newPrice = parseFloat(document.getElementById("edit-offer-price-input").value);
+                if (isNaN(newPrice)) return alert("Invalid price");
+                await executeStatusUpdate('sell', id, null, newPrice);
+                closeSellEditModal();
+            };
+            document.getElementById("sell-edit-modal").classList.remove("hidden");
+        }
+
+        function closeSellEditModal() {
+            document.getElementById("sell-edit-modal").classList.add("hidden");
+        }
+
+        // 4. Module Recycle Requests
+        async function loadRecycleModule() {
+            try {
+                const res = await fetch('http://localhost:5000/api/admin/recycle', { headers: { 'Authorization': `Bearer ${token}` } });
+                const result = await res.json();
+                if (result.success) {
+                    allRecycleData = result.data || [];
+                    renderRecycleTable(allRecycleData);
+                }
+            } catch (e) {
+                console.error("Error loading recycle requests:", e);
+            }
+        }
+
+        function renderRecycleTable(recycles) {
+            const tbody = document.getElementById("recycle-table-body");
+            if (!recycles || recycles.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">No recycling requests found.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = recycles.map(r => `
+                <tr class="hover:bg-slate-900/50">
+                    <td class="p-4 font-bold text-white">${r.product}</td>
+                    <td class="p-4 text-slate-300">${r.isPickup ? 'Home Pickup' : 'Self Drop-off'}</td>
+                    <td class="p-4 text-slate-400 font-mono text-[10px]">${r.coordinates || 'N/A'}</td>
+                    <td class="p-4 text-slate-300">${r.user ? r.user.fullName : 'User'}</td>
+                    <td class="p-4 text-slate-400">${new Date(r.createdAt).toLocaleDateString()}</td>
+                    <td class="p-4">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.status === 'Completed' || r.status === 'Assigned' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : r.status === 'Rejected' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">
+                            ${r.status}
+                        </span>
+                    </td>
+                    <td class="p-4 text-right space-x-1">
+                        <button onclick="promptStatusUpdate('recycle', '${r._id}', 'Assigned')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-[10px]">Approve Pickup</button>
+                        <button onclick="promptStatusUpdate('recycle', '${r._id}', 'Completed')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[10px]">Complete</button>
+                        <button onclick="promptStatusUpdate('recycle', '${r._id}', 'Rejected')" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-[10px]">Reject</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Status Update Trigger & Confirmation Modal
+        function promptStatusUpdate(moduleType, id, newStatus) {
+            document.getElementById("confirm-modal-title").textContent = `Confirm ${newStatus} Action`;
+            document.getElementById("confirm-modal-message").textContent = `Are you sure you want to change this request status to ${newStatus}?`;
+            const proceedBtn = document.getElementById("confirm-modal-proceed-btn");
+            proceedBtn.onclick = async () => {
+                closeConfirmModal();
+                await executeStatusUpdate(moduleType, id, newStatus);
+            };
+            document.getElementById("confirm-modal").classList.remove("hidden");
+        }
+
+        function closeConfirmModal() {
+            document.getElementById("confirm-modal").classList.add("hidden");
+        }
+
+        async function executeStatusUpdate(moduleType, id, newStatus, offerPrice) {
+            try {
+                let url = "";
+                let bodyData = {};
+                if (newStatus) bodyData.status = newStatus;
+                if (offerPrice !== undefined) bodyData.offerPrice = offerPrice;
+
+                if (moduleType === 'donation') url = `http://localhost:5000/api/admin/donations/${id}/status`;
+                else if (moduleType === 'sell') url = `http://localhost:5000/api/admin/sell/${id}/status`;
+                else if (moduleType === 'recycle') url = `http://localhost:5000/api/admin/recycle/${id}/status`;
+
+                const res = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(bodyData)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    await loadAllAdminModules();
+                } else {
+                    alert("Status update failed: " + result.message);
+                }
+            } catch (e) {
+                console.error("Failed status update:", e);
+                alert("Server error processing status update.");
+            }
+        }
+
+        // Global Search & Filters
+        function applyFiltersAndSearch() {
+            const query = (document.getElementById("global-search-input").value || "").toLowerCase();
+            const statusFilter = document.getElementById("filter-status").value;
+            const userRoleFilter = document.getElementById("filter-user-role").value;
+
+            // Filter Users
+            const filteredUsers = allUsersData.filter(u => {
+                const matchesQuery = !query || (u.fullName || "").toLowerCase().includes(query) || (u.email || "").toLowerCase().includes(query);
+                const matchesRole = !userRoleFilter || u.role === userRoleFilter;
+                return matchesQuery && matchesRole;
+            });
+            renderUsersTable(filteredUsers);
+
+            // Filter Donations
+            const filteredDonations = allDonationsData.filter(d => {
+                const matchesQuery = !query || (d.productDetails || "").toLowerCase().includes(query) || (d.address || "").toLowerCase().includes(query) || (d.user && d.user.fullName ? d.user.fullName.toLowerCase().includes(query) : false);
+                const matchesStatus = !statusFilter || d.status === statusFilter;
+                return matchesQuery && matchesStatus;
+            });
+            renderDonationsTable(filteredDonations);
+
+            // Filter Sell
+            const filteredSell = allSellData.filter(s => {
+                const matchesQuery = !query || (s.deviceName || "").toLowerCase().includes(query) || (s.user && s.user.fullName ? s.user.fullName.toLowerCase().includes(query) : false);
+                const matchesStatus = !statusFilter || s.status === statusFilter;
+                return matchesQuery && matchesStatus;
+            });
+            renderSellTable(filteredSell);
+
+            // Filter Recycle
+            const filteredRecycle = allRecycleData.filter(r => {
+                const matchesQuery = !query || (r.product || "").toLowerCase().includes(query) || (r.user && r.user.fullName ? r.user.fullName.toLowerCase().includes(query) : false);
+                const matchesStatus = !statusFilter || r.status === statusFilter;
+                return matchesQuery && matchesStatus;
+            });
+            renderRecycleTable(filteredRecycle);
+        }
+
+        function showAccessDenied(reason) {
+            const overlay = document.getElementById("access-denied-overlay");
+            const text = document.getElementById("denied-reason-text");
+            if (text) text.textContent = reason;
+            if (overlay) overlay.classList.remove("hidden");
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 3000);
+        }
+
+        function switchAdminTab(targetTab) {
+            document.querySelectorAll(".admin-panel").forEach(panel => panel.classList.add("hidden"));
+            const target = document.getElementById(`admin-panel-${targetTab}`);
+            if (target) target.classList.remove("hidden");
+
+            const navs = ['dashboard', 'users', 'donations', 'sell', 'recycle', 'analytics'];
+            navs.forEach(tab => {
+                const btn = document.getElementById(`nav-${tab}`);
+                if (btn) {
+                    if (tab === targetTab) {
+                        btn.className = "w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-bold bg-primary-500 text-white shadow-lg shadow-primary-500/15 transition-all";
+                    } else {
+                        btn.className = "w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-white transition-all";
+                    }
+                }
+            });
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch('http://localhost:5000/api/auth/logout', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            } catch (e) {
+                console.warn("Logout error:", e.message);
+            }
+            if (firebase.apps.length) await firebase.auth().signOut();
+            window.location.href = "index.html";
+        }
+
+        // ==========================================
+        // ANALYTICS & INSIGHTS SYSTEM LOGIC
+        // ==========================================
+        let chartDonationsInst = null;
+        let chartSellsInst = null;
+        let chartRecyclesInst = null;
+        let chartStatusInst = null;
+        let chartEcoTierInst = null;
+        let analyticsData = null;
+
+        async function loadAnalyticsModule() {
+            try {
+                const res = await fetch('http://localhost:5000/api/admin/analytics', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+                if (!result.success) return;
+
+                analyticsData = result.data;
+                const { overview, charts, leaderboard, recentActivity, systemHealth, insights } = analyticsData;
+
+                // 1. Overview Cards
+                document.getElementById("ana-daily").textContent = overview.dailyRequests || 0;
+                document.getElementById("ana-weekly").textContent = overview.weeklyRequests || 0;
+                document.getElementById("ana-monthly").textContent = overview.monthlyRequests || 0;
+                document.getElementById("ana-avg-daily").textContent = overview.avgDailyActivity || 0;
+                document.getElementById("ana-completed").textContent = overview.completedRequests || 0;
+                document.getElementById("ana-pending").textContent = overview.pendingRequests || 0;
+                document.getElementById("ana-rejected").textContent = overview.rejectedRequests || 0;
+                document.getElementById("ana-eco-points").textContent = overview.totalEcoPoints || 0;
+
+                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                const prepareChartLabelsAndData = (monthlyList) => {
+                    if (!monthlyList || monthlyList.length === 0) {
+                        return { labels: ["No Data"], data: [0] };
+                    }
+                    return {
+                        labels: monthlyList.map(item => `${monthNames[item._id.month - 1]} ${item._id.year}`),
+                        data: monthlyList.map(item => item.count)
+                    };
+                };
+
+                // 2. Charts
+                // Chart 1: Monthly Donations (Bar Chart)
+                const donationsChartData = prepareChartLabelsAndData(charts.monthlyDonations);
+                if (chartDonationsInst) chartDonationsInst.destroy();
+                chartDonationsInst = new Chart(document.getElementById('chart-donations'), {
+                    type: 'bar',
+                    data: {
+                        labels: donationsChartData.labels,
+                        datasets: [{
+                            label: 'Donations',
+                            data: donationsChartData.data,
+                            backgroundColor: 'rgba(99, 102, 241, 0.6)',
+                            borderColor: '#6366f1',
+                            borderWidth: 2,
+                            borderRadius: 8
+                        }]
+                    },
+                    options: { responsive: true, plugins: { legend: { display: false } } }
+                });
+
+                // Chart 2: Monthly Sell Requests (Line Chart)
+                const sellsChartData = prepareChartLabelsAndData(charts.monthlySells);
+                if (chartSellsInst) chartSellsInst.destroy();
+                chartSellsInst = new Chart(document.getElementById('chart-sells'), {
+                    type: 'line',
+                    data: {
+                        labels: sellsChartData.labels,
+                        datasets: [{
+                            label: 'Sell Requests',
+                            data: sellsChartData.data,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: { responsive: true, plugins: { legend: { display: false } } }
+                });
+
+                // Chart 3: Recycling Requests (Line Chart)
+                const recyclesChartData = prepareChartLabelsAndData(charts.monthlyRecycles);
+                if (chartRecyclesInst) chartRecyclesInst.destroy();
+                chartRecyclesInst = new Chart(document.getElementById('chart-recycles'), {
+                    type: 'line',
+                    data: {
+                        labels: recyclesChartData.labels,
+                        datasets: [{
+                            label: 'Recycle Requests',
+                            data: recyclesChartData.data,
+                            borderColor: '#16a34a',
+                            backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: { responsive: true, plugins: { legend: { display: false } } }
+                });
+
+                // Chart 4: Request Status Distribution (Pie Chart)
+                if (chartStatusInst) chartStatusInst.destroy();
+                chartStatusInst = new Chart(document.getElementById('chart-status'), {
+                    type: 'pie',
+                    data: {
+                        labels: ['Pending', 'Approved', 'Rejected', 'Completed'],
+                        datasets: [{
+                            data: [
+                                charts.statusDistribution.pending || 0,
+                                charts.statusDistribution.approved || 0,
+                                charts.statusDistribution.rejected || 0,
+                                charts.statusDistribution.completed || 0
+                            ],
+                            backgroundColor: ['#f59e0b', '#3b82f6', '#ef4444', '#10b981']
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+
+                // Chart 5: Eco Points Distribution by Tier (Doughnut Chart)
+                const tierLabels = (charts.ecoByTier || []).map(t => t._id || 'Silver');
+                const tierData = (charts.ecoByTier || []).map(t => t.totalPoints || 0);
+                if (chartEcoTierInst) chartEcoTierInst.destroy();
+                chartEcoTierInst = new Chart(document.getElementById('chart-eco-tier'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: tierLabels.length > 0 ? tierLabels : ['Silver'],
+                        datasets: [{
+                            data: tierData.length > 0 ? tierData : [0],
+                            backgroundColor: ['#a855f7', '#6366f1', '#3b82f6', '#10b981']
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+
+                // 3. User Leaderboard
+                const lbContainer = document.getElementById("leaderboard-list");
+                if (!leaderboard || leaderboard.length === 0) {
+                    lbContainer.innerHTML = `<div class="p-4 text-center text-slate-500">No user activity recorded yet.</div>`;
+                } else {
+                    lbContainer.innerHTML = leaderboard.map((user, idx) => `
+                        <div class="p-3.5 flex items-center justify-between hover:bg-slate-900/50">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs ${idx === 0 ? 'text-amber-400 border border-amber-400/30' : idx === 1 ? 'text-slate-300' : idx === 2 ? 'text-amber-600' : 'text-slate-500'}">
+                                    #${idx + 1}
+                                </span>
+                                <div class="w-8 h-8 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center font-bold text-xs border border-primary-500/30">
+                                    ${user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-white">${user.fullName}</div>
+                                    <div class="text-[10px] text-slate-400">${user.email} • <span class="text-amber-400">${user.currentTier || 'Silver'}</span></div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-black text-primary-400">${user.ecoPoints || 0} pts</div>
+                                <div class="text-[9px] text-slate-500">${user.totalDonations} donates • ${user.totalSells} sells • ${user.totalRecycles} recycles</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // 4. Recent Activity Timeline
+                const timelineContainer = document.getElementById("activity-timeline");
+                if (!recentActivity || recentActivity.length === 0) {
+                    timelineContainer.innerHTML = `<div class="text-center text-slate-500 py-4">No recent activity logged.</div>`;
+                } else {
+                    timelineContainer.innerHTML = recentActivity.map(act => `
+                        <div class="flex items-start space-x-3 p-2.5 bg-slate-900/60 rounded-xl border border-slate-800/40">
+                            <div class="w-2 h-2 rounded-full bg-primary-500 mt-1.5 shrink-0"></div>
+                            <div class="min-w-0 flex-grow">
+                                <div class="flex justify-between font-bold text-white text-[11px]">
+                                    <span>${act.user ? act.user.fullName : 'System'}</span>
+                                    <span class="text-[9px] text-slate-500 font-normal">${new Date(act.createdAt).toLocaleString()}</span>
+                                </div>
+                                <div class="text-[10px] text-primary-400 font-semibold mt-0.5">${act.action}</div>
+                                <p class="text-[10px] text-slate-400 truncate mt-0.5">${act.details}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // 5. System Health
+                const healthContainer = document.getElementById("system-health-body");
+                healthContainer.innerHTML = `
+                    <div class="flex justify-between items-center p-2 rounded-lg bg-slate-900 border border-slate-800">
+                        <span class="text-slate-300"><i class="fa-solid fa-database text-emerald-400 mr-2"></i>MongoDB Atlas</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">${systemHealth.mongodb}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 rounded-lg bg-slate-900 border border-slate-800">
+                        <span class="text-slate-300"><i class="fa-solid fa-fire text-amber-400 mr-2"></i>Firebase Authentication</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">${systemHealth.firebase}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 rounded-lg bg-slate-900 border border-slate-800">
+                        <span class="text-slate-300"><i class="fa-solid fa-cloud text-blue-400 mr-2"></i>Cloudinary Storage</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">${systemHealth.cloudinary}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 rounded-lg bg-slate-900 border border-slate-800">
+                        <span class="text-slate-300"><i class="fa-solid fa-server text-purple-400 mr-2"></i>Node.js Express Server</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-400 border border-purple-500/30">${systemHealth.backend}</span>
+                    </div>
+                `;
+
+                // 6. Quick Insights
+                const insightsContainer = document.getElementById("insights-body");
+                insightsContainer.innerHTML = `
+                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center">
+                        <span class="text-slate-400">Most Active Day</span>
+                        <span class="font-bold text-white">${insights.mostActiveDay}</span>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center">
+                        <span class="text-slate-400">Most Donated Device</span>
+                        <span class="font-bold text-indigo-400 max-w-xs truncate">${insights.mostDonatedDevice}</span>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center">
+                        <span class="text-slate-400">Most Sold Device</span>
+                        <span class="font-bold text-emerald-400 max-w-xs truncate">${insights.mostSoldDevice}</span>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center">
+                        <span class="text-slate-400">Average Points / User</span>
+                        <span class="font-bold text-purple-400">${insights.avgEcoPoints} pts</span>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center">
+                        <span class="text-slate-400">Carbon Offset Estimate</span>
+                        <span class="font-bold text-primary-400">${insights.carbonSavingsKg} kg CO₂</span>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between items-center">
+                        <span class="text-slate-400">Equivalent Trees Saved</span>
+                        <span class="font-bold text-teal-400">🌳 ${insights.treesSaved} trees</span>
+                    </div>
+                `;
+
+            } catch (err) {
+                console.error("Failed to load analytics module:", err);
+            }
+        }
+
+        // EXPORT FUNCTIONS
+        function exportCSV(type) {
+            let data = [];
+            let filename = `eRevive_${type}_report.csv`;
+            let headers = [];
+
+            if (type === 'users') {
+                headers = ['ID', 'Full Name', 'Email', 'Role', 'Tier', 'Eco Points', 'Join Date'];
+                data = allUsersData.map(u => [u._id, u.fullName, u.email, u.role, u.currentTier, u.ecoPoints, u.createdAt]);
+            } else if (type === 'donations') {
+                headers = ['ID', 'Product Details', 'Donor', 'Phone', 'Address', 'Status', 'Points', 'Date'];
+                data = allDonationsData.map(d => [d._id, `"${d.productDetails}"`, d.user ? d.user.fullName : d.contactName, d.phone, `"${d.address}"`, d.status, d.pointsAwarded, d.createdAt]);
+            } else if (type === 'sell') {
+                headers = ['ID', 'Device Name', 'Seller', 'Base Price', 'Final Offer', 'Status', 'Date'];
+                data = allSellData.map(s => [s._id, `"${s.deviceName}"`, s.user ? s.user.fullName : 'Seller', s.basePrice, s.finalPrice, s.status, s.createdAt]);
+            } else if (type === 'recycle') {
+                headers = ['ID', 'Product', 'Pickup Type', 'Coordinates', 'User', 'Status', 'Date'];
+                data = allRecycleData.map(r => [r._id, `"${r.product}"`, r.isPickup ? 'Pickup' : 'Drop-off', r.coordinates, r.user ? r.user.fullName : 'User', r.status, r.createdAt]);
+            }
+
+            const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...data.map(e => e.join(','))].join('\n');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportAnalyticsPDF() {
+            if (!window.jspdf) {
+                alert("jsPDF library loading...");
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            doc.text("eRevive Platform Analytics Report", 14, 20);
+
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
+            doc.text("--------------------------------------------------------------------------------", 14, 33);
+
+            if (analyticsData && analyticsData.overview) {
+                const o = analyticsData.overview;
+                doc.setFont("helvetica", "bold");
+                doc.text("1. Executive Summary Overview", 14, 42);
+                doc.setFont("helvetica", "normal");
+                doc.text(`• Daily Requests: ${o.dailyRequests}`, 18, 50);
+                doc.text(`• Weekly Requests: ${o.weeklyRequests}`, 18, 56);
+                doc.text(`• Monthly Requests: ${o.monthlyRequests}`, 18, 62);
+                doc.text(`• Completed Requests: ${o.completedRequests}`, 18, 68);
+                doc.text(`• Pending Requests: ${o.pendingRequests}`, 18, 74);
+                doc.text(`• Total Eco Points Awarded: ${o.totalEcoPoints} pts`, 18, 80);
+            }
+
+            if (analyticsData && analyticsData.insights) {
+                const i = analyticsData.insights;
+                doc.setFont("helvetica", "bold");
+                doc.text("2. Sustainability & Operations Insights", 14, 95);
+                doc.setFont("helvetica", "normal");
+                doc.text(`• Most Donated Device: ${i.mostDonatedDevice}`, 18, 103);
+                doc.text(`• Most Sold Device: ${i.mostSoldDevice}`, 18, 109);
+                doc.text(`• Carbon Offset Estimate: ${i.carbonSavingsKg} kg CO2`, 18, 115);
+                doc.text(`• Equivalent Trees Saved: ${i.treesSaved} trees`, 18, 121);
+            }
+
+            doc.save("eRevive_Analytics_Report.pdf");
+        }
+    </script>
+</body>
+</html>

@@ -7,16 +7,27 @@ const { calculateSale } = require('../services/businessRules');
 const createSellRequest = async (req, res, next) => {
     try {
         const user = req.user;
-        const { deviceName, defects = [], customDefects = '' } = req.body;
+        const { deviceName, brand = 'Generic', category = 'Smartphone', condition = 'Good', defects = [], customDefects = '' } = req.body;
 
         if (!deviceName) {
             return res.status(400).json({ success: false, message: 'deviceName is required', errors: [] });
         }
-        const { basePrice, finalPrice } = calculateSale(deviceName, defects, customDefects);
+
+        // Calculate offer using category & condition-based dynamic pricing engine
+        const { basePrice, finalPrice, category: resolvedCat, condition: resolvedCond } = calculateSale({
+            deviceName,
+            category,
+            condition,
+            defects,
+            customDefects
+        });
 
         const sellRequest = await SellDevice.create({
             user: user._id,
             deviceName,
+            brand,
+            category: resolvedCat || category,
+            condition: resolvedCond || condition,
             basePrice,
             finalPrice,
             defects: defects || [],

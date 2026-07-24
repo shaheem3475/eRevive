@@ -10,6 +10,18 @@ const sellDeviceSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    brand: {
+        type: String,
+        default: 'Generic'
+    },
+    category: {
+        type: String,
+        default: 'Smartphone'
+    },
+    condition: {
+        type: String,
+        default: 'Good'
+    },
     basePrice: {
         type: Number,
         required: true
@@ -27,7 +39,7 @@ const sellDeviceSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Approved', 'Paid'],
+        enum: ['Pending', 'Approved', 'Paid', 'Rejected'],
         default: 'Pending'
     }
 }, { timestamps: true });

@@ -32,7 +32,7 @@ const donationRequestSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Collected', 'Completed'],
+        enum: ['Pending', 'Approved', 'Collected', 'Completed', 'Rejected'],
         default: 'Pending'
     }
 }, { timestamps: true });

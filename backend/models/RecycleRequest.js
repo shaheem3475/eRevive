@@ -28,7 +28,7 @@ const recycleRequestSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Assigned', 'Completed'],
+        enum: ['Pending', 'Assigned', 'Completed', 'Rejected'],
         default: 'Pending'
     },
     scheduledDate: {
